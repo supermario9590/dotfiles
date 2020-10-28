@@ -52,8 +52,8 @@
 ;; Make escape quit prompts
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
-;; Set theme (temporarily)
-(load-theme 'wombat)
+;; Set theme
+(load-theme 'arc-dark t)
 
 ;; USE PACKAGE
 
@@ -117,11 +117,6 @@
 
 (use-package doom-modeline
   :init (doom-modeline-mode 1))
-
-;;; THEMES
-
-(use-package doom-themes
-  :init (load-theme 'doom-dracula t))
 
 ;; RAINBOW DELIMETERS
 
