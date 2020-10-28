@@ -1,0 +1,98 @@
+#+title: Super Mario 9590's Dotfiles
+
+* What are Dotfiles?
+
+Dotfiles are the configuration files of your system. They're names usually begin with a dot. This repository contains these configuration files.
+
+* How to Use My Dotfiles
+
+** Dependencies
+
+You need to install certain thing to use my method of managing my dotfiles.
+
+*** Debian
+
+#+begin_src bash
+apt install git stow
+#+end_src
+
+*** Arch
+
+#+begin_src bash
+pacman -S git stow
+#+end_src
+
+*** Red Hat and Fedora
+
+#+begin_src bash
+dnf install git stow
+#+end_src
+
+*** Gentoo
+
+#+begin_src bash
+emerge --ask --verbose dev-vcs/git
+#+end_src
+
+*** NixOS
+
+#+begin_src bash
+nix-env -iA nixos.git nixos.stow
+#+end_src
+
+*** Guix
+
+#+begin_src bash
+guix install stow git
+#+end_src
+
+*** Other
+
+Install the package =stow= and =git= with your distro's package manager or build them from source.
+
+** Clone and use
+
+To actually use my dotfiles, run these commands:
+
+#+begin_src bash
+git clone https://github.com/supermario9590/dotfiles.git ~/.dotfiles
+cd ~/.dotfiles
+stow .
+#+end_src
+
+* How to manage your own dofiles
+
+I use the GNU Stow method of managing your dotfiles, which is really easy.
+
+** Initialising the repostiory
+
+To initialize the repository, run:
+
+#+begin_src bash
+cd ~
+mkdir .dotfiles
+cd .dotfiles
+git init
+#+end_src
+
+** Adding your dotfiles to the repository
+
+To add a file to the repository eg. =.bashrc=, in the =~/.dotfiles= directory, run
+
+#+begin_src bash
+touch .bashrc
+stow --adopt .
+#+end_src
+
+Then you need to do the same thing for all of your dotfiles.
+
+** Pushing the changes
+
+Just doing the above won't put it in your git repository. To do that run:
+
+#+begin_src bash
+git remote add origin yourRepoName
+git add .
+git commit -m "Initial Commit"
+git push -u origin master
+#+end_src
