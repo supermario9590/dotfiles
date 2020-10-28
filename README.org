@@ -1,5 +1,21 @@
 #+title: Super Mario 9590's Dotfiles
 
+* Table of Contents :toc:
+
+- [[#what-are-dotfiles][What are Dotfiles?]]
+- [[#how-to-use-my-dotfiles][How to Use My Dotfiles]]
+  - [[#dependencies][Dependencies]]
+    - [[#debian][Debian]]
+    - [[#arch][Arch]]
+    - [[#red-hat-and-fedora][Red Hat and Fedora]]
+    - [[#gentoo][Gentoo]]
+    - [[#nixos][NixOS]]
+    - [[#guix][Guix]]
+- [[#how-to-manage-your-own-dotfiles][How to Manage Your Own Dotfiles]]
+  - [[#initalising-the-repository][Initialising the Repository]]
+  - [[#adding-your-dotfiles-to-the-repository][Adding Your Dotfiles to the Repository]]
+  - [[#pushing-the-changes][Pushing the Changes]]
+
 * What are Dotfiles?
 
 Dotfiles are the configuration files of your system. They're names usually begin with a dot. This repository contains these configuration files.
@@ -60,7 +76,7 @@ cd ~/.dotfiles
 stow .
 #+end_src
 
-* How to manage your own dofiles
+* How to Manage Your Own dofiles
 
 I use the GNU Stow method of managing your dotfiles, which is really easy.
 
@@ -75,7 +91,7 @@ cd .dotfiles
 git init
 #+end_src
 
-** Adding your dotfiles to the repository
+** Adding Your Dotfiles to the Repository
 
 To add a file to the repository eg. =.bashrc=, in the =~/.dotfiles= directory, run
 
@@ -86,7 +102,7 @@ stow --adopt .
 
 Then you need to do the same thing for all of your dotfiles.
 
-** Pushing the changes
+** Pushing the Changes
 
 Just doing the above won't put it in your git repository. To do that run:
 
