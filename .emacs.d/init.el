@@ -225,8 +225,9 @@
 (defun av/org-mode-setup ()
   (org-indent-mode)
   (variable-pitch-mode 1)
-  (visual-line-mode 1)
+  (visual-line-mode 1))
 
+(defun av/org-font-setup ()
   ;; Replace list hyphen with dot
   (font-lock-add-keywords 'org-mode
                           '(("^ *\\([-]\\) "
@@ -370,7 +371,8 @@
        "| %U | %^{Weight} | %^{Notes} |" :kill-buffer t)))
 
   (define-key global-map (kbd "C-c j")
-    (lambda () (interactive) (org-capture nil "jj"))))
+    (lambda () (interactive) (org-capture nil "jj")))
+  (av/org-font-setup))
 
 (use-package org-bullets
   :after org
@@ -400,3 +402,7 @@
 ;; HASKELL
 
 (use-package haskell-mode)
+
+;; CUSTOM THEME
+
+(use-package autothemer)
