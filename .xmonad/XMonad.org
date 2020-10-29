@@ -1,17 +1,50 @@
+#+title: XMonad Config
+#+property: header-args :tangle ./xmonad.hs
+
+* About this config
+
+XMonad is a dynamically tiling window manager which is written and configured in Haskell.
+
+- XMonad Website: [[https://xmonad.org]]
+
+* Imports
+
+These are haskell modules that we will call upon later in the config.
+
+** Base
+
+#+begin_src haskell
 import XMonad
 import qualified XMonad.StackSet as W
 import System.Exit
+#+end_src
 
+** Utilities
+
+#+begin_src haskell
 import XMonad.Util.EZConfig
 import XMonad.Util.Run
 import XMonad.Util.SpawnOnce
+#+end_src
 
+** Hooks
+
+#+begin_src haskell
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.EwmhDesktops
+#+end_src
+** Data
 
+#+begin_src haskell
 import Data.Monoid
 import qualified Data.Map as M
+#+end_src
 
+* Variables
+
+These are variables that will be useful throughout the config.
+
+#+begin_src haskell
 myTerminal :: String
 myTerminal = "st"
 
@@ -41,12 +74,24 @@ myFont = "xft:Mononoki Nerd Font:bold:size=9:antialias=true:hinting=true"
 
 myBrowser :: String
 myBrowser = "chromium"
+#+end_src
 
+* Autostart
+
+This configures what commands are run on startup.
+
+#+begin_src haskell
 myStartupHook = do
   spawnOnce "nitrogen --restore &"
   spawnOnce "picom -f &"
   spawnOnce "xfce4-power-manager &"
+#+end_src
 
+* Layouts
+
+XMonad has lots of layouts that can be imported manually. I personally do not use that.
+
+#+begin_src haskell
 myLayout = avoidStruts (tiled ||| Mirror tiled ||| Full)
   where
     -- default tiling algorithm partitions the screen into two panes
@@ -60,23 +105,62 @@ myLayout = avoidStruts (tiled ||| Mirror tiled ||| Full)
 
     -- Percent of screen to increment by when resizing panes
     delta   = 3/100
+#+end_src
 
+* Workspaces
+
+XMonad has these things called workspaces.
+
+#+begin_src haskell
 myWorkspaces :: [ String ]
 myWorkspaces    = [ "1", "2", "3" ,"4" ,"5" ,"6" ,"7" ,"8" ,"9" ]
+#+end_src
 
+* Manage Hook
+
+Sets some rules for certain programs. Examples include forcing certain programs to always float, or to always appear on a certain workspace.  Forcing programs to a certain workspace with a doShift requires xdotool if you are using clickable workspaces. You need the className or title of the program. Use xprop to get this info.
+
+#+begin_src haskell
 myManageHook :: XMonad.Query (Data.Monoid.Endo WindowSet)
 myManageHook = composeAll
   [ className =? "MPlayer"        --> doFloat
   , className =? "Gimp"           --> doFloat
   , resource  =? "desktop_window" --> doIgnore
   , resource  =? "kdesktop"       --> doIgnore ]
+#+end_src
 
+* Log Hook
+
+Sets opacity for inactive (unfocused) windows.
+
+#+begin_src haskell
 myLogHook :: X ()
 myLogHook = return ()
+#+end_src
 
+* Event Hook
+
+This manages what happens when something else hapens.
+
+#+begin_src haskell
 myEventHook :: Event -> X All
 myEventHook = mempty
+#+end_src
+* Keybindings
 
+I am using XMonad.Util.EZConfig to set keybindings.
+
+|-----------------------------+--------------------------------------------|
+| A few important keybindings | Associated action                          |
+|-----------------------------+--------------------------------------------|
+| MODKEY + SHIFT + RETURN     | Opens terminal (ST)                        |
+| MODKEY + P                  | Runs Dmenu                                 |
+| MODKEY + SHIFT + C          | Closes focused window                      |
+| MODKEY + 1 - 9              | Switches workspaces                        |
+| MODKEY + SHIFT + 1 - 9      | Moves focused window to selected workspace |
+|-----------------------------+--------------------------------------------|
+
+#+begin_src haskell
 myKeys :: [ ( String, X () ) ]
 myKeys =
 
@@ -150,7 +234,13 @@ myKeys =
   , ("C-e e", spawn "emacs")
   , ("C-e d", spawn "emacs --eval '(dired nil)'")
   ]
+#+end_src
 
+* Main
+
+This is what is run whenever XMonad is executed. Everything comes together here.
+
+#+begin_src haskell
 main = do
   xmproc <- spawnPipe "xmobar"
   xmonad $ ewmh def {
@@ -171,3 +261,4 @@ main = do
                logHook            = myLogHook,
                startupHook        = myStartupHook
                } `additionalKeysP` myKeys
+#+end_src
