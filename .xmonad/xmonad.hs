@@ -8,6 +8,7 @@ import XMonad.Util.SpawnOnce
 
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.EwmhDesktops
+import XMonad.Hooks.DynamicLog
 
 import Data.Monoid
 import qualified Data.Map as M
@@ -61,8 +62,18 @@ myLayout = avoidStruts (tiled ||| Mirror tiled ||| Full)
     -- Percent of screen to increment by when resizing panes
     delta   = 3/100
 
+xmobarEscape :: String -> String
+xmobarEscape = concatMap doubleLts
+  where doubleLts '<' = "<<"
+        doubleLts x    = [x]
+
 myWorkspaces :: [ String ]
-myWorkspaces    = [ "1", "2", "3" ,"4" ,"5" ,"6" ,"7" ,"8" ,"9" ]
+myWorkspaces = clickable . (map xmobarEscape)
+  $ [ "1", "2", "3" ,"4" ,"5" ,"6" ,"7" ,"8" ,"9" ]
+  where
+    clickable l = [ "<action=xdotool key super+" ++ show (n) ++ "> " ++ ws ++ " </action>" |
+                  (i,ws) <- zip [1..9] l,
+                  let n = i ]
 
 myManageHook :: XMonad.Query (Data.Monoid.Endo WindowSet)
 myManageHook = composeAll
@@ -149,25 +160,38 @@ myKeys =
   -- Emacs
   , ("C-e e", spawn "emacs")
   , ("C-e d", spawn "emacs --eval '(dired nil)'")
+
+  -- Media keys
+  , ("<XF86AudioLowerVolume>", spawn "amixer set Master 5%-")
+  , ("<XF86AudioRaiseVolume>", spawn "amixer set Master 5%+")
+  , ("<XF86AudioMute>", spawn "amixer set Master toggle")
   ]
 
 main = do
   xmproc <- spawnPipe "xmobar"
   xmonad $ ewmh def {
-               -- simple stuff
-               terminal           = myTerminal,
-               focusFollowsMouse  = myFocusFollowsMouse,
-               clickJustFocuses   = myClickJustFocuses,
-               borderWidth        = myBorderWidth,
-               modMask            = myModMask,
-               workspaces         = myWorkspaces,
-               normalBorderColor  = myNormalBorderColor,
-               focusedBorderColor = myFocusedBorderColor,
-               
-               -- hooks, layouts
-               layoutHook         = myLayout,
-               manageHook         = myManageHook <+> manageDocks,
-               handleEventHook    = myEventHook <+> fullscreenEventHook <+> docksEventHook,
-               logHook            = myLogHook,
-               startupHook        = myStartupHook
-               } `additionalKeysP` myKeys
+                    -- simple stuff
+                    terminal           = myTerminal,
+                    focusFollowsMouse  = myFocusFollowsMouse,
+                    clickJustFocuses   = myClickJustFocuses,
+                    borderWidth        = myBorderWidth,
+                    modMask            = myModMask,
+                    workspaces         = myWorkspaces,
+                    normalBorderColor  = myNormalBorderColor,
+                    focusedBorderColor = myFocusedBorderColor,
+                    
+                    -- hooks, layouts
+                    layoutHook         = myLayout,
+                    manageHook         = myManageHook <+> manageDocks,
+                    handleEventHook    = myEventHook <+> fullscreenEventHook <+> docksEventHook,
+                    logHook            = myLogHook <+> dynamicLogWithPP xmobarPP
+                    { ppOutput = hPutStrLn xmproc
+                    , ppCurrent = xmobarColor "yellow" "" . wrap "[" "]"
+                    , ppHiddenNoWindows = xmobarColor "grey" ""
+                    , ppTitle   = xmobarColor "green"  "" . shorten 40
+                    , ppVisible = wrap "("")"
+                    , ppUrgent  = xmobarColor "red" "yellow"
+                    , ppHidden = xmobarColor "grey" "" . wrap "" "*"
+                    },
+                    startupHook        = myStartupHook
+                    } `additionalKeysP` myKeys
