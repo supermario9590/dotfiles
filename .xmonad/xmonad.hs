@@ -6,6 +6,12 @@ import XMonad.Util.EZConfig
 import XMonad.Util.Run
 import XMonad.Util.SpawnOnce
 
+import XMonad.Prompt
+import XMonad.Prompt.Shell
+import XMonad.Prompt.XMonad
+import XMonad.Prompt.Ssh
+import XMonad.Prompt.FuzzyMatch
+
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.DynamicLog
@@ -62,6 +68,27 @@ myLayout = avoidStruts (tiled ||| Mirror tiled ||| Full)
     -- Percent of screen to increment by when resizing panes
     delta   = 3/100
 
+avXPConfig :: XPConfig
+avXPConfig = def
+  { font                = myFont
+  , bgColor             = "#282c34"
+  , fgColor             = "#bbc2cf"
+  , bgHLight            = "#c792ea"
+  , fgHLight            = "#000000"
+  , borderColor         = "#535974"
+  , promptBorderWidth   = 0
+  , position            = Top
+  , height              = 20
+  , historySize         = 256
+  , historyFilter       = id
+  , defaultText         = []
+  , autoComplete        = Just 100000  -- set Just 100000 for .1 sec
+  , showCompletionOnTab = False
+  , alwaysHighlight     = True
+  , searchPredicate     = fuzzyMatch
+  , maxComplRows        = Nothing      -- set to Just 5 for 5 rows
+  }
+
 xmobarEscape :: String -> String
 xmobarEscape = concatMap doubleLts
   where doubleLts '<' = "<<"
@@ -69,7 +96,7 @@ xmobarEscape = concatMap doubleLts
 
 myWorkspaces :: [ String ]
 myWorkspaces = clickable . (map xmobarEscape)
-  $ [ "1", "2", "3" ,"4" ,"5" ,"6" ,"7" ,"8" ,"9" ]
+  $ [ "dev", "www", "sys" ,"vbox" ,"vm" ,"chat" ,"mus" ,"vid" ,"gfx" ]
   where
     clickable l = [ "<action=xdotool key super+" ++ show (n) ++ "> " ++ ws ++ " </action>" |
                   (i,ws) <- zip [1..9] l,
@@ -91,11 +118,11 @@ myEventHook = mempty
 myKeys :: [ ( String, X () ) ]
 myKeys =
 
-  -- launch a terminal
-  [ ("M-S-<Return>", spawn myTerminal)
+  -- launch shell prompt
+  [ ("M-S-<Return>", shellPrompt avXPConfig)
 
-  -- launch dmenu
-  , ("M-p", spawn "dmenu_run")
+  -- launch a terminal
+  , ("M-<Return>", spawn myTerminal)
 
   -- launch gmrun
   , ("M-S-p", spawn "gmrun")
@@ -120,9 +147,6 @@ myKeys =
 
   -- Move focus to the master window
   , ("M-m", windows W.focusMaster  )
-
-  -- Swap the focused window and the master window
-  , ("M-<Return>", windows W.swapMaster)
 
   -- Swap the focused window with the next window
   , ("M-S-j", windows W.swapDown  )
