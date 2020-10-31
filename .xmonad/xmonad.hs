@@ -15,6 +15,7 @@ import XMonad.Prompt.FuzzyMatch
 import XMonad.Hooks.ManageDocks
 import XMonad.Hooks.EwmhDesktops
 import XMonad.Hooks.DynamicLog
+import XMonad.Hooks.ServerMode
 
 import Data.Monoid
 import qualified Data.Map as M
@@ -206,8 +207,14 @@ main = do
                     
                     -- hooks, layouts
                     layoutHook         = myLayout,
-                    manageHook         = myManageHook <+> manageDocks,
-                    handleEventHook    = myEventHook <+> fullscreenEventHook <+> docksEventHook,
+                    manageHook         = myManageHook
+                                     <+> manageDocks,
+                    handleEventHook    = myEventHook
+                                     <+> fullscreenEventHook
+                                     <+> docksEventHook
+                                     <+> serverModeEventHookCmd
+                                     <+> serverModeEventHook
+                                     <+> serverModeEventHookF "XMONAD_PRINT" (io . putStrLn),
                     logHook            = myLogHook <+> dynamicLogWithPP xmobarPP
                     { ppOutput = hPutStrLn xmproc
                     , ppCurrent = xmobarColor "yellow" "" . wrap "[" "]"

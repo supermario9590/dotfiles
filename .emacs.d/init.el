@@ -52,9 +52,6 @@
 ;; Make escape quit prompts
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
-;; Set theme
-(load-theme 'arc-dark t)
-
 ;; USE PACKAGE
 
 ;; initialize package
@@ -117,6 +114,9 @@
 
 (use-package doom-modeline
   :init (doom-modeline-mode 1))
+
+(use-package doom-themes
+  :init (load-theme 'doom-dracula t))
 
 ;; RAINBOW DELIMETERS
 
@@ -197,10 +197,10 @@
 (use-package projectile
   :init
   (projectile-mode)
-  (setq projectile-search-project-path '("~/Documents/Projects"
-					 "~/Documents/pkgs/suckless"
-					 "~/Documents/pkgs/manualbuild"
-					 "~/Documents/Courses"))
+  (setq projectile-project-search-path '("~/Documents/Projects/"
+					 "~/Documents/pkgs/suckless/"
+					 "~/Documents/pkgs/manualbuild/"
+					 "~/Documents/Courses/"))
   (setq projectile-switch-project-action #'projectile-dired)
   :custom ((projectile-completion-system 'ivy)))
 
@@ -387,6 +387,32 @@
 
 (use-package visual-fill-column
   :hook (org-mode . av/org-mode-visual-fill))
+
+(org-babel-do-load-languages
+  'org-babel-load-languages
+  '((emacs-lisp . t)
+    (java . t)
+    (haskell . t)
+    (shell . t)
+    (python . t)))
+
+(push '("conf-unix" . conf-unix) org-src-lang-modes)
+
+;; This is needed as of Org 9.2
+(require 'org-tempo)
+
+(add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+(add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+(add-to-list 'org-structure-template-alist '("py" . "src python"))
+(add-to-list 'org-structure-template-alist '("java" . "src java :classname Java"))
+(add-to-list 'org-structure-template-alist '("hs" . "src haskell"))
+
+;; Automatically tangle our Emacs.org config file when we save it
+(defun av/org-babel-tangle-config ()
+    ;; Dynamic scoping to the rescue
+    (let ((org-confirm-babel-evaluate nil))
+      (org-babel-tangle)))
+(add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'av/org-babel-tangle-config)))
 
 ;; EAF
 
