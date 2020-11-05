@@ -223,7 +223,6 @@
 
 
 (defun av/org-mode-setup ()
-  (org-indent-mode)
   (variable-pitch-mode 1)
   (visual-line-mode 1))
 
