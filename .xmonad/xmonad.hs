@@ -1,25 +1,25 @@
-import XMonad
+import           XMonad
 import qualified XMonad.StackSet as W
-import System.Exit
+import           System.Exit
 
-import XMonad.Util.EZConfig
-import XMonad.Util.Run
-import XMonad.Util.SpawnOnce
+import           XMonad.Util.EZConfig
+import           XMonad.Util.Run
+import           XMonad.Util.SpawnOnce
 
-import XMonad.Prompt
-import XMonad.Prompt.Shell
-import XMonad.Prompt.XMonad
-import XMonad.Prompt.Ssh
-import XMonad.Prompt.FuzzyMatch
+import           XMonad.Prompt
+import           XMonad.Prompt.Shell
+import           XMonad.Prompt.XMonad
+import           XMonad.Prompt.Ssh
+import           XMonad.Prompt.FuzzyMatch
 
-import XMonad.Hooks.ManageDocks
-import XMonad.Hooks.EwmhDesktops
-import XMonad.Hooks.DynamicLog
-import XMonad.Hooks.ServerMode
+import           XMonad.Hooks.ManageDocks
+import           XMonad.Hooks.EwmhDesktops
+import           XMonad.Hooks.DynamicLog
+import           XMonad.Hooks.ServerMode
 
-import Data.Monoid
+import           Data.Monoid
 import qualified Data.Map as M
-import Data.Tree
+import           Data.Tree
 
 import qualified XMonad.Actions.TreeSelect as TS
 
@@ -53,6 +53,7 @@ myFont = "xft:Mononoki Nerd Font:bold:size=9:antialias=true:hinting=true"
 myBrowser :: String
 myBrowser = "chromium"
 
+myStartupHook :: X ()
 myStartupHook = do
   spawnOnce "nitrogen --restore &"
   spawnOnce "picom -f &"

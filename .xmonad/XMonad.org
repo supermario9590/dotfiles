@@ -15,44 +15,44 @@ These are haskell modules that we will call upon later in the config.
 ** Base
 
 #+begin_src haskell
-import XMonad
+import           XMonad
 import qualified XMonad.StackSet as W
-import System.Exit
+import           System.Exit
 #+end_src
 
 ** Utilities
 
 #+begin_src haskell
-import XMonad.Util.EZConfig
-import XMonad.Util.Run
-import XMonad.Util.SpawnOnce
+import           XMonad.Util.EZConfig
+import           XMonad.Util.Run
+import           XMonad.Util.SpawnOnce
 #+end_src
 
 ** Prompts
 
 #+begin_src haskell
-import XMonad.Prompt
-import XMonad.Prompt.Shell
-import XMonad.Prompt.XMonad
-import XMonad.Prompt.Ssh
-import XMonad.Prompt.FuzzyMatch
+import           XMonad.Prompt
+import           XMonad.Prompt.Shell
+import           XMonad.Prompt.XMonad
+import           XMonad.Prompt.Ssh
+import           XMonad.Prompt.FuzzyMatch
 #+end_src
 
 ** Hooks
 
 #+begin_src haskell
-import XMonad.Hooks.ManageDocks
-import XMonad.Hooks.EwmhDesktops
-import XMonad.Hooks.DynamicLog
-import XMonad.Hooks.ServerMode
+import           XMonad.Hooks.ManageDocks
+import           XMonad.Hooks.EwmhDesktops
+import           XMonad.Hooks.DynamicLog
+import           XMonad.Hooks.ServerMode
 #+end_src
 
 ** Data
 
 #+begin_src haskell
-import Data.Monoid
+import           Data.Monoid
 import qualified Data.Map as M
-import Data.Tree
+import           Data.Tree
 #+end_src
 
 ** Actions
