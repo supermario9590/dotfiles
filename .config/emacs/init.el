@@ -1,9 +1,9 @@
 ;; Keep transient cruft out of ~/.emacs.d/
 (setq user-emacs-directory "~/.cache/emacs/"
       backup-directory-alist `(("." . ,(expand-file-name "backups" user-emacs-directory)))
-      url-history-file (expand-file-name "url/history" user-emacs-directory)
-      auto-save-list-file-prefix (expand-file-name "auto-save-list/.saves-" user-emacs-directory)
-      projectile-known-projects-file (expand-file-name "projectile-bookmarks.eld" user-emacs-directory))
+url-history-file (expand-file-name "url/history" user-emacs-directory)
+auto-save-list-file-prefix (expand-file-name "auto-save-list/.saves-" user-emacs-directory)
+projectile-known-projects-file (expand-file-name "projectile-bookmarks.eld" user-emacs-directory))
 
 ;; Keep customization settings in a temporary file (thanks Ambrevar!)
 (setq custom-file
@@ -278,9 +278,9 @@
     'org-babel-load-languages
     '((emacs-lisp . t)
       (java . t)
-      (haskell . t)
-      (shell . t)
-      (python . t)))
+(haskell . t)
+(shell . t)
+(python . t)))
 
 (push '("conf-unix" . conf-unix) org-src-lang-modes)
 
@@ -319,8 +319,14 @@
 (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
 (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch)
 
+(use-package org-bullets
+  :after org
+  :hook (org-mode . org-bullets-mode)
+  :custom
+  (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+
 (setq org-agenda-files
-      '("~/Documents/OrgFiles/Tasks.org"
+'("~/Documents/OrgFiles/Tasks.org"
 	"~/Documents/OrgFiles/Events.org"
 	"~/Documents/OrgFiles/Habits.org"))
 
@@ -378,18 +384,18 @@
          (org-agenda-files org-agenda-files)))))))
 
 (setq org-tag-alist
-  '((:startgroup)
-     ; Put mutually exclusive tags here
-     (:endgroup)
-     ("@errand" . ?E)
-     ("@home" . ?H)
-     ("@work" . ?W)
-     ("agenda" . ?a)
-     ("planning" . ?p)
-     ("publish" . ?P)
-     ("batch" . ?b)
-     ("note" . ?n)
-     ("idea" . ?i)))
+   '((:startgroup)
+      ; Put mutually exclusive tags here
+      (:endgroup)
+("@errand" . ?E)
+("@home" . ?H)
+("@work" . ?W)
+("agenda" . ?a)
+("planning" . ?p)
+("publish" . ?P)
+("batch" . ?b)
+("note" . ?n)
+("idea" . ?i)))
 
 (setq org-log-done 'time)
 (setq org-log-into-drawer t)
@@ -535,3 +541,66 @@
   :commands vterm
   :config
   (setq vterm-max-scrollback 10000))
+
+(defun av/exwm-update-class ()
+  (exwm-workspace-rename-buffer exwm-class-name))
+
+(use-package exwm
+  :config
+  ;; Set the default number of workspaces
+  (setq exwm-workspace-number 5)
+
+  ;; When window "class" updates, use it to set the buffer name
+  (add-hook 'exwm-update-class-hook #'av/exwm-update-class)
+
+  ;; Rebind CapsLock to Ctrl
+  (start-process-shell-command "xmodmap" nil "xmodmap ~/.config/emacs/exwm/Xmodmap")
+
+  ;; Start XFCE4 Power Manager
+  (start-process-shell-command "xfce4-power-manager" nil "xfce4-power-manager")
+
+  ;; These keys should always pass through to Emacs
+  (setq exwm-input-prefix-keys
+    '(?\C-x
+      ?\C-u
+      ?\C-h
+      ?\M-x
+      ?\M-`
+      ?\M-&
+      ?\M-:
+      ?\C-\M-j  ;; Buffer list
+      ?\C-\ ))  ;; Ctrl+Space
+
+  ;; Ctrl+Q will enable the next key to be sent directly
+  (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
+
+  ;; Set up global key bindings.  These always work, no matter the input state!
+  ;; Keep in mind that changing this list after EXWM initializes has no effect.
+  (setq exwm-input-global-keys
+       `(
+         ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
+         ([?\s-r] . exwm-reset)
+
+         ;; Move between windows
+         ([s-left] . windmove-left)
+         ([s-right] . windmove-right)
+         ([s-up] . windmove-up)
+         ([s-down] . windmove-down)
+
+         ;; Launch applications via shell command
+         ([?\s-&] . (lambda (command)
+                      (interactive (list (read-shell-command "$ ")))
+                      (start-process-shell-command command nil command)))
+
+         ;; Switch workspace
+         ([?\s-w] . exwm-workspace-switch)
+
+         ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
+         ,@(mapcar (lambda (i)
+                     `(,(kbd (format "s-%d" i)) .
+                       (lambda ()
+                         (interactive)
+                           (exwm-workspace-switch-create ,i))))
+                   (number-sequence 0 9))))
+
+ (exwm-enable))

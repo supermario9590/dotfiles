@@ -50,4 +50,4 @@ fi
 
 setxkbmap gb
 
-exec xmonad
+exec ~/.config/emacs/exwm/start-exwm.sh

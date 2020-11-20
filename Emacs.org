@@ -3,8 +3,70 @@
 
 
 * Table of Contents
-:PROPERTIES:
-:TOC:      :include all
+  :PROPERTIES:
+  :TOC:      :include all
+  :END:
+:CONTENTS:
+- [[#table-of-contents][Table of Contents]]
+- [[#keep-configemacs-clean][Keep .config/emacs Clean]]
+- [[#package-management][Package Management]]
+- [[#server-mode][Server Mode]]
+- [[#keyboard-bindings][Keyboard Bindings]]
+  - [[#escape-cancels-all][Escape Cancels All]]
+  - [[#lets-be-evil][Let's Be Evil]]
+  - [[#keybinding-panel-which-key][Keybinding Panel (which-key)]]
+  - [[#simplify-leader-bindings-generalel][Simplify Leader Bindings (general.el)]]
+- [[#general-configuration][General Configuration]]
+  - [[#user-interface][User Interface]]
+  - [[#theme][Theme]]
+  - [[#font][Font]]
+  - [[#mode-line][Mode Line]]
+    - [[#basic-customization][Basic Customization]]
+    - [[#doom-modeline][Doom Modeline]]
+    - [[#notifications][Notifications]]
+    - [[#auto-saving-changed-files][Auto-Saving Changed Files]]
+    - [[#auto-reverting-changed-files][Auto-Reverting Changed Files]]
+    - [[#ui-toggles][UI Toggles]]
+    - [[#highlight-matching-braces][Highlight Matching Braces]]
+- [[#editing-configuration][Editing Configuration]]
+  - [[#tab-widths][Tab Widths]]
+  - [[#use-spaces-instead-of-tabs-for-indentation][Use spaces instead of tabs for indentation]]
+  - [[#commenting-lines][Commenting Lines]]
+- [[#configuration-files][Configuration Files]]
+  - [[#helpers][Helpers]]
+  - [[#bindings][Bindings]]
+- [[#stateful-keymaps-with-hydra][Stateful Keymaps with Hydra]]
+- [[#better-completions-with-ivy][Better Completions with Ivy]]
+- [[#set-margins-for-modes][Set Margins for Modes]]
+- [[#file-browsing][File Browsing]]
+  - [[#dired][Dired]]
+- [[#org-mode][Org Mode]]
+  - [[#org-configuration][Org Configuration]]
+  - [[#automatically-tangle-on-save][Automatically Tangle on Save]]
+  - [[#fonts-and-bullets][Fonts and Bullets]]
+  - [[#org-file-paths][Org File Paths]]
+  - [[#agenda][Agenda]]
+  - [[#tags][Tags]]
+  - [[#tasks][Tasks]]
+  - [[#capture-templates][Capture Templates]]
+  - [[#block-templates][Block Templates]]
+  - [[#bindings][Bindings]]
+  - [[#end-use-package-org-mode][End use-package org-mode]]
+  - [[#update-table-of-contents-on-save][Update Table of Contents on Save]]
+- [[#development][Development]]
+  - [[#git][Git]]
+  - [[#projectile][Projectile]]
+  - [[#more-helpful-help-pages][More Helpful Help Pages]]
+  - [[#productivity][Productivity]]
+    - [[#snippets][Snippets]]
+    - [[#smart-parens][Smart Parens]]
+    - [[#rainbow-delimeters][Rainbow Delimeters]]
+    - [[#rainbow-mode][Rainbow Mode]]
+- [[#applications][Applications]]
+  - [[#binding-prefix][Binding Prefix]]
+  - [[#vterm][Vterm]]
+- [[#window-management][Window Management]]
+  - [[#exwm-configuration][EXWM Configuration]]
 :END:
 
 * Keep .config/emacs Clean
@@ -505,6 +567,12 @@
      (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
      (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
      (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch)
+     
+     (use-package org-bullets
+       :after org
+       :hook (org-mode . org-bullets-mode)
+       :custom
+       (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
    #+end_src
 
 ** Org File Paths
@@ -812,4 +880,73 @@
      :commands vterm
      :config
      (setq vterm-max-scrollback 10000))
+   #+end_src
+   
+* Window Management
+  
+** EXWM Configuration
+   
+   #+begin_src emacs-lisp
+   (defun av/exwm-update-class ()
+     (exwm-workspace-rename-buffer exwm-class-name))
+     
+   (use-package exwm
+     :config
+     ;; Set the default number of workspaces
+     (setq exwm-workspace-number 5)
+     
+     ;; When window "class" updates, use it to set the buffer name
+     (add-hook 'exwm-update-class-hook #'av/exwm-update-class)
+     
+     ;; Rebind CapsLock to Ctrl
+     (start-process-shell-command "xmodmap" nil "xmodmap ~/.config/emacs/exwm/Xmodmap")
+     
+     ;; Start XFCE4 Power Manager
+     (start-process-shell-command "xfce4-power-manager" nil "xfce4-power-manager")
+     
+     ;; These keys should always pass through to Emacs
+     (setq exwm-input-prefix-keys
+       '(?\C-x
+         ?\C-u
+         ?\C-h
+         ?\M-x
+         ?\M-`
+         ?\M-&
+         ?\M-:
+         ?\C-\M-j  ;; Buffer list
+         ?\C-\ ))  ;; Ctrl+Space
+         
+     ;; Ctrl+Q will enable the next key to be sent directly
+     (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
+
+     ;; Set up global key bindings.  These always work, no matter the input state!
+     ;; Keep in mind that changing this list after EXWM initializes has no effect.
+     (setq exwm-input-global-keys
+          `(
+            ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
+            ([?\s-r] . exwm-reset)
+            
+            ;; Move between windows
+            ([s-left] . windmove-left)
+            ([s-right] . windmove-right)
+            ([s-up] . windmove-up)
+            ([s-down] . windmove-down)
+            
+            ;; Launch applications via shell command
+            ([?\s-&] . (lambda (command)
+                         (interactive (list (read-shell-command "$ ")))
+                         (start-process-shell-command command nil command)))
+                         
+            ;; Switch workspace
+            ([?\s-w] . exwm-workspace-switch)
+            
+            ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
+            ,@(mapcar (lambda (i)
+                        `(,(kbd (format "s-%d" i)) .
+                          (lambda ()
+                            (interactive)
+                              (exwm-workspace-switch-create ,i))))
+                      (number-sequence 0 9))))
+
+    (exwm-enable))
    #+end_src
