@@ -334,7 +334,6 @@
     (global-auto-revert-mode 1)
     #+end_src
 
-
 *** UI Toggles
 
     #+begin_src emacs-lisp

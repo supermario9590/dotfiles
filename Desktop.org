@@ -15,7 +15,7 @@
    (defun av/set-wallpaper ()
        (interactive)
        (start-process-shell-command
-         "feh" nil  "feh --bg-scale ~/Pictures/wallpapers/wallpaper-1.jpg"))
+         "nitrogen" nil  "nitrogen --restore"))
 
    (defun av/exwm-init-hook ()
      ;; Make workspace 1 be the one where we land at startup
@@ -46,7 +46,6 @@
      
      ;; Load the system tray before exwm-init
      (require 'exwm-systemtray)
-     (setq exwm-systemtray-height 32)
      (exwm-systemtray-enable)
      
      ;; These keys should always pass through to Emacs
@@ -98,11 +97,22 @@
    
 * Desktop Environment
   
+** Desktop Key Bindings
+   
+   #+begin_src emacs-lisp
+   (use-package desktop-environment
+     :after exwm
+     :config (desktop-environment-mode)
+     :custom
+     (desktop-environment-brightness-small-increment "2%+")
+     (desktop-environment-brightness-small-decrement "2%-")
+     (desktop-environment-brightness-normal-increment "5%+")
+     (desktop-environment-brightness-normal-decrement "5%-"))
+   #+end_src
+  
 ** Launcher Script
    
-   #+begin_src shell :tangle .config/emacs/exwm/start-exwm.sh
-   #!/bin/sh
-
+   #+begin_src shell :tangle .config/emacs/exwm/start-exwm.sh :shebang #!/bin/sh
    picom -f &
    
    exec dbus-launch --exit-with-session emacs -mm --debug-init -l ~/.config/emacs/desktop.el
