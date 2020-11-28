@@ -35,6 +35,12 @@
 (column-number-mode)
 (global-display-line-numbers-mode t)
 
+;; Set frame transparency
+(set-frame-parameter (selected-frame) 'alpha '(90 . 90))
+(add-to-list 'default-frame-alist '(alpha . (90 . 90)))
+(set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
 ;; Disable line numbers for some modes
 (dolist (mode '(org-mode-hook
                 term-mode-hook
@@ -128,7 +134,9 @@
          ("C-x b" . counsel-ibuffer)
          ("C-x C-f" . counsel-find-file)
          :map minibuffer-local-map
-         ("C-r" . 'counsel-minibuffer-history)))
+         ("C-r" . 'counsel-minibuffer-history))
+  :custom
+  (counsel-linux-app-format-function #'counsel-linux-app-format-function-name-only))
 
 (use-package helpful
   :custom
@@ -342,6 +350,9 @@
 
 (use-package org-tree-slide)
 
+(use-package org-make-toc
+  :hook (org-mode . org-make-toc-mode))
+
 (use-package projectile
   :diminish projectile-mode
   :config (projectile-mode)
@@ -438,6 +449,7 @@
   ;; Doesn't work as expected!
   ;;(add-to-list 'dired-open-functions #'dired-open-xdg t)
   (setq dired-open-extensions '(("png" . "feh")
+				  ("mp4" . "mpv")
                                 ("mkv" . "mpv"))))
 
 (use-package dired-hide-dotfiles

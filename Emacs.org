@@ -1,5 +1,6 @@
 #+title: Emacs Config
 #+property: header-args:emacs-lisp :tangle ./.config/emacs/init.el
+#+author: supermario9590
 
 This is my Emacs configuration written as an Org Mode document.
 
@@ -8,6 +9,59 @@ This is my Emacs configuration written as an Org Mode document.
   ;; NOTE: .config/emacs/init.el is now generated from Emacs.org, edit that file for your changes to automatically save
 
 #+end_src
+
+* Table of Contents
+:PROPERTIES:
+:TOC:      :include all
+:END:
+
+:CONTENTS:
+- [[#table-of-contents][Table of Contents]]
+- [[#dotfiles][Dotfiles]]
+- [[#package-system-setup][Package System Setup]]
+- [[#basic-ui-configuration][Basic UI Configuration]]
+  - [[#font-configuration][Font Configuration]]
+- [[#keybinding-configuration][Keybinding Configuration]]
+- [[#ui-configuration][UI Configuration]]
+  - [[#colour-theme][Colour Theme]]
+  - [[#better-modeline][Better Modeline]]
+  - [[#which-key][Which Key]]
+  - [[#ivy-and-counsel][Ivy and Counsel]]
+  - [[#helpful-help-commands][Helpful Help Commands]]
+  - [[#text-scaling][Text Scaling]]
+- [[#org-mode][Org Mode]]
+  - [[#better-font-faces][Better Font Faces]]
+  - [[#basic-config][Basic Config]]
+    - [[#nicer-heading-bullets][Nicer Heading Bullets]]
+    - [[#center-org-buffers][Center Org Buffers]]
+  - [[#configure-babel-languages][Configure Babel Languages]]
+  - [[#structure-templates][Structure Templates]]
+  - [[#auto-tangle-org-files][Auto-tangle Org Files]]
+  - [[#presentations][Presentations]]
+  - [[#table-of-contents][Table of Contents]]
+- [[#development][Development]]
+  - [[#projectile][Projectile]]
+  - [[#magit][Magit]]
+  - [[#rainbow-delimeters][Rainbow Delimeters]]
+  - [[#commenting][Commenting]]
+- [[#terminals][Terminals]]
+  - [[#term-mode][term-mode]]
+    - [[#better-term-mode-colors][Better term-mode colors]]
+  - [[#vterm][vterm]]
+  - [[#shell-mode][shell-mode]]
+  - [[#eshell][Eshell]]
+- [[#file-management][File Management]]
+  - [[#dired][Dired]]
+    - [[#key-bindings][Key Bindings]]
+      - [[#navigation][Navigation]]
+      - [[#marking-files][Marking files]]
+      - [[#copying-and-renaming-files][Copying and Renaming files]]
+      - [[#deleting-files][Deleting files]]
+      - [[#creating-and-extracting-archives][Creating and extracting archives]]
+      - [[#other-common-operations][Other common operations]]
+    - [[#configuration][Configuration]]
+:END:
+
 
 * Dotfiles
 
@@ -65,6 +119,12 @@ This is my Emacs configuration written as an Org Mode document.
 
     (column-number-mode)
     (global-display-line-numbers-mode t)
+
+    ;; Set frame transparency
+    (set-frame-parameter (selected-frame) 'alpha '(90 . 90))
+    (add-to-list 'default-frame-alist '(alpha . (90 . 90)))
+    (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+    (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
     ;; Disable line numbers for some modes
     (dolist (mode '(org-mode-hook
@@ -213,7 +273,9 @@ This is my Emacs configuration written as an Org Mode document.
               ("C-x b" . counsel-ibuffer)
               ("C-x C-f" . counsel-find-file)
               :map minibuffer-local-map
-              ("C-r" . 'counsel-minibuffer-history)))
+              ("C-r" . 'counsel-minibuffer-history))
+       :custom
+       (counsel-linux-app-format-function #'counsel-linux-app-format-function-name-only))
 
    #+end_src
 
@@ -515,6 +577,17 @@ I use =org-tree-slide= to present org documents.
 
 #+end_src
 
+** Table of Contents
+
+I use =org-make-toc= to automatically make tables of contents.
+
+#+begin_src emacs-lisp
+
+  (use-package org-make-toc
+    :hook (org-mode . org-make-toc-mode))
+
+#+end_src
+
 * Development
 
 ** Projectile
@@ -794,6 +867,7 @@ Dired is a built-in file manager for Emacs that does some pretty amazing things!
     ;; Doesn't work as expected!
     ;;(add-to-list 'dired-open-functions #'dired-open-xdg t)
     (setq dired-open-extensions '(("png" . "feh")
+				    ("mp4" . "mpv")
                                   ("mkv" . "mpv"))))
 
   (use-package dired-hide-dotfiles
