@@ -1,7 +1,12 @@
 #+title: Super Mario 9590's Dotfiles
 
-* Table of Contents :toc:
+* Table of Contents
+:PROPERTIES:
+:TOC:      :include all
+:END:
 
+:CONTENTS:
+- [[#table-of-contents][Table of Contents]]
 - [[#what-are-dotfiles][What are Dotfiles?]]
 - [[#how-to-use-my-dotfiles][How to Use My Dotfiles]]
   - [[#dependencies][Dependencies]]
@@ -11,10 +16,13 @@
     - [[#gentoo][Gentoo]]
     - [[#nixos][NixOS]]
     - [[#guix][Guix]]
-- [[#how-to-manage-your-own-dotfiles][How to Manage Your Own Dotfiles]]
-  - [[#initalising-the-repository][Initialising the Repository]]
+    - [[#other][Other]]
+  - [[#clone-and-use][Clone and use]]
+- [[#how-to-manage-your-own-dofiles][How to Manage Your Own dofiles]]
+  - [[#initialising-the-repostiory][Initialising the repostiory]]
   - [[#adding-your-dotfiles-to-the-repository][Adding Your Dotfiles to the Repository]]
   - [[#pushing-the-changes][Pushing the Changes]]
+:END:
 
 * What are Dotfiles?
 
