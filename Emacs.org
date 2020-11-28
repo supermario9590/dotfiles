@@ -1,901 +1,805 @@
 #+title: Emacs Config
-#+property: header-args:emacs-lisp :tangle .config/emacs/init.el
+#+property: header-args:emacs-lisp :tangle ./.config/emacs/init.el
 
+This is my Emacs configuration written as an Org Mode document.
 
-* Table of Contents
-  :PROPERTIES:
-  :TOC:      :include all
-  :END:
-:CONTENTS:
-- [[#table-of-contents][Table of Contents]]
-- [[#keep-configemacs-clean][Keep .config/emacs Clean]]
-- [[#package-management][Package Management]]
-- [[#server-mode][Server Mode]]
-- [[#keyboard-bindings][Keyboard Bindings]]
-  - [[#escape-cancels-all][Escape Cancels All]]
-  - [[#lets-be-evil][Let's Be Evil]]
-  - [[#keybinding-panel-which-key][Keybinding Panel (which-key)]]
-  - [[#simplify-leader-bindings-generalel][Simplify Leader Bindings (general.el)]]
-- [[#general-configuration][General Configuration]]
-  - [[#user-interface][User Interface]]
-  - [[#theme][Theme]]
-  - [[#font][Font]]
-  - [[#mode-line][Mode Line]]
-    - [[#basic-customization][Basic Customization]]
-    - [[#doom-modeline][Doom Modeline]]
-    - [[#notifications][Notifications]]
-    - [[#auto-saving-changed-files][Auto-Saving Changed Files]]
-    - [[#auto-reverting-changed-files][Auto-Reverting Changed Files]]
-    - [[#ui-toggles][UI Toggles]]
-    - [[#highlight-matching-braces][Highlight Matching Braces]]
-- [[#editing-configuration][Editing Configuration]]
-  - [[#tab-widths][Tab Widths]]
-  - [[#use-spaces-instead-of-tabs-for-indentation][Use spaces instead of tabs for indentation]]
-  - [[#commenting-lines][Commenting Lines]]
-- [[#configuration-files][Configuration Files]]
-  - [[#helpers][Helpers]]
-  - [[#bindings][Bindings]]
-- [[#stateful-keymaps-with-hydra][Stateful Keymaps with Hydra]]
-- [[#better-completions-with-ivy][Better Completions with Ivy]]
-- [[#set-margins-for-modes][Set Margins for Modes]]
-- [[#file-browsing][File Browsing]]
-  - [[#dired][Dired]]
-- [[#org-mode][Org Mode]]
-  - [[#org-configuration][Org Configuration]]
-  - [[#automatically-tangle-on-save][Automatically Tangle on Save]]
-  - [[#fonts-and-bullets][Fonts and Bullets]]
-  - [[#org-file-paths][Org File Paths]]
-  - [[#agenda][Agenda]]
-  - [[#tags][Tags]]
-  - [[#tasks][Tasks]]
-  - [[#capture-templates][Capture Templates]]
-  - [[#block-templates][Block Templates]]
-  - [[#bindings][Bindings]]
-  - [[#end-use-package-org-mode][End use-package org-mode]]
-  - [[#update-table-of-contents-on-save][Update Table of Contents on Save]]
-  - [[#use-org-mode-for-presentations][Use Org Mode for Presentations]]
-- [[#development][Development]]
-  - [[#git][Git]]
-  - [[#projectile][Projectile]]
-  - [[#more-helpful-help-pages][More Helpful Help Pages]]
-  - [[#productivity][Productivity]]
-    - [[#snippets][Snippets]]
-    - [[#smart-parens][Smart Parens]]
-    - [[#rainbow-delimeters][Rainbow Delimeters]]
-    - [[#rainbow-mode][Rainbow Mode]]
-- [[#applications][Applications]]
-  - [[#binding-prefix][Binding Prefix]]
-  - [[#vterm][Vterm]]
-:END:
+#+begin_src emacs-lisp
 
-* Keep .config/emacs Clean
+  ;; NOTE: .config/emacs/init.el is now generated from Emacs.org, edit that file for your changes to automatically save
 
-  I don’t want a bunch of transient files showing up as untracked in the Git repo so I move them all to another location.
+#+end_src
+
+* Dotfiles
+
+  All of my dotfiles are in a directory and that directory is symlinked to my home directory. This code makes it so that it automatically follows symlinks.
 
   #+begin_src emacs-lisp
-  ;; Keep transient cruft out of ~/.emacs.d/
-  (setq user-emacs-directory "~/.cache/emacs/"
-        backup-directory-alist `(("." . ,(expand-file-name "backups" user-emacs-directory)))
-	      url-history-file (expand-file-name "url/history" user-emacs-directory)
-	      auto-save-list-file-prefix (expand-file-name "auto-save-list/.saves-" user-emacs-directory)
-	      projectile-known-projects-file (expand-file-name "projectile-bookmarks.eld" user-emacs-directory))
 
-  ;; Keep customization settings in a temporary file (thanks Ambrevar!)
-  (setq custom-file
-        (if (boundp 'server-socket-dir)
-            (expand-file-name "custom.el" server-socket-dir)
-          (expand-file-name (format "emacs-custom-%s.el" (user-uid)) temporary-file-directory)))
-  (load custom-file t)
+    (setq vc-follow-symlinks t)
+
   #+end_src
 
-* Package Management
+* Package System Setup
 
-  Set up ELPA, MELPA, and Org package repositories and load =use-package= to manage package configuration.
+  Emacs has a built in package manager but it doesn’t make it easy to automatically install packages on a new system the first time you pull down your configuration. [[https://github.com/jwiegley/use-package][use-package]] is a really helpful package used in this configuration to make it a lot easier to automate the installation and configuration of everything else we use.
 
   #+begin_src emacs-lisp
-  ;; Initialize package
-  (require 'package)
-  
-  ;; Set sources
-  (setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                           ("org" . "https://orgmode.org/elpa/")
-                           ("elpa" . "https://elpa.gnu.org/packages/")))
 
-  ;; Initialize sources
-  (package-initialize)
-  (unless package-archive-contents
-    (package-refresh-contents))
+    ;; Initialize package sources
+    (require 'package)
 
-  ;; Install use-package
-  (unless (package-installed-p 'use-package)
-    (package-install 'use-package))
+    (setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                             ("org" . "https://orgmode.org/elpa/")
+                             ("elpa" . "https://elpa.gnu.org/packages/")))
 
-  ;; Require use-package
-  (require 'use-package)
-  
-  ;; Configure use-package
-  (setq use-package-always-ensure t)
+    (package-initialize)
+    (unless package-archive-contents
+      (package-refresh-contents))
+
+    ;; Initialize use-package on non-Linux platforms
+    (unless (package-installed-p 'use-package)
+      (package-install 'use-package))
+
+    (require 'use-package)
+    (setq use-package-always-ensure t)
+
   #+end_src
 
-* Server Mode
+* Basic UI Configuration
 
-  Start the Emacs server from this instance so that all =emacsclient= calls are routed here.
+  This section configures basic UI settings that remove unneeded elements to make Emacs look a lot more minimal and modern. If you’re just getting started in Emacs, the menu bar might be helpful so you can remove the =(menu-bar-mode -1)= line if you’d like to still see that.
 
   #+begin_src emacs-lisp
-  (server-start)
+
+    (setq inhibit-startup-message t)
+
+    (scroll-bar-mode -1)        ; Disable visible scrollbar
+    (tool-bar-mode -1)          ; Disable the toolbar
+    (tooltip-mode -1)           ; Disable tooltips
+    (set-fringe-mode 10)        ; Give some breathing room
+
+    (menu-bar-mode -1)          ; Disable the menu bar
+
+    ;; Set up the visible bell
+    (setq visible-bell t)
+
+    (column-number-mode)
+    (global-display-line-numbers-mode t)
+
+    ;; Disable line numbers for some modes
+    (dolist (mode '(org-mode-hook
+                    term-mode-hook
+                    shell-mode-hook
+                    vterm-mode-hook
+                    treemacs-mode-hook
+                    eshell-mode-hook))
+      (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
   #+end_src
 
-* Keyboard Bindings
+** Font Configuration
 
-** Escape Cancels All
-
-   #+begin_src emacs-lisp
-   (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-   #+end_src
-
-** Let's Be Evil
-
-   Evil Mode gives us Vi-like keybindings for Emacs.
+   I am using the [[https://github.com/tonsky/FiraCode][Fira Code]] and [[https://fonts.google.com/specimen/Cantarell][Cantarell]] fonts for this configuration which will more than likely need to be installed on your machine. Both can usually be found in the various Linux distro package managers or downloaded from the links above.
 
    #+begin_src emacs-lisp
-   (use-package evil
-     :init
-     (setq evil-want-integration t)
-     (setq evil-want-keybinding nil)
-     (setq evil-want-C-u-scroll t)
-     (setq evil-want-C-i-jump nil)
-     :config
-     (evil-mode 1)
-     (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-     (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
-     
-     ;; Use visual line motions even outside of visual-line-mode buffers
-     (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-     (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-     
-     (evil-set-initial-state 'messages-buffer-mode 'normal)
-     (evil-set-initial-state 'dashboard-mode 'normal))
 
-  (use-package evil-collection
-    :after evil
-    :config
-    (evil-collection-init))
+     (set-face-attribute 'default nil :font "Fira Code" :height 110)
+
+     ;; Set the fixed pitch face
+     (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 110)
+
+     ;; Set the variable pitch face
+     (set-face-attribute 'variable-pitch nil :font "Cantarell" :height 110 :weight 'regular)
+
    #+end_src
 
-** Keybinding Panel (which-key)
+* Keybinding Configuration
 
-   [[https://github.com/justbur/emacs-which-key][which-key]] gives us a brilliant keybinding panel.
+  This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil-mode]] for a Vi-like modal editing experience. [[https://github.com/noctuid/general.el][general.el]] is used for easy keybinding configuration that integrates well with which-key. [[https://github.com/emacs-evil/evil-collection][evil-collection]] is used to automatically configure various Emacs modes with Vi-like keybindings for evil-mode.
 
-   #+begin_src emacs-lisp
-   (use-package which-key
-     :init (which-key-mode)
-     :config
-     (setq which-key-idle-delay 0.3))
-   #+end_src
+  #+begin_src emacs-lisp
 
-** Simplify Leader Bindings (general.el)
+    ;; Make ESC quit prompts
+    (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
 
-   [[https://github.com/noctuid/general.el][general.el]] is a fantastic library for defining prefixed keybindings, especially in conjunction with Evil modes.
-
-   #+begin_src emacs-lisp
-   (use-package general
-     :config
-     (general-create-definer av/leader-keys
-     :keymaps '(normal insert visual emacs)
-     :prefix "SPC"
-     :global-prefix "C-SPC"))
-   #+end_src
-
-* General Configuration
-
-** User Interface
-
-   Clean up Emacs' user interface, make it more minimal.
-
-   #+begin_src emacs-lisp
-   ;; Disable startup message
-   (setq inhibit-startup-message t)
-   
-   ;; Disable scrollbar
-   (scroll-bar-mode -1)
-   
-   ;; Disable toolbar
-   (tool-bar-mode -1)
-   
-   ;; Disable menubar
-   (menu-bar-mode -1)
-
-   ;; Disable tooltips
-   (tooltip-mode -1)
-   
-   ;; Enable visual bell
-   (setq visible-bell t)
-   #+end_src
-
-   Improve scrolling.
-
-   #+begin_src emacs-lisp
-   (setq mouse-wheel-scroll-amount '(1 ((shift) . 1))) ;; one line at a time
-   (setq mouse-wheel-progressive-speed nil) ;; don't accelerate scrolling
-   (setq mouse-wheel-follow-mouse 't) ;; scroll window under mouse
-   (setq scroll-step 1) ;; keyboard scroll one line at a time (setq use-dialog-box nil) ; Disable dialog boxes since they weren't working in Mac OSX
-   #+end_src
-   
-   Set frame transparency and maximize windows by default.
-   
-   #+begin_src emacs-lisp
-   ;; Set frame transparency
-   (set-frame-parameter (selected-frame) 'alpha '(90 . 90))
-   (add-to-list 'default-frame-alist '(alpha . (90 . 90)))
-   (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
-   (add-to-list 'default-frame-alist '(fullscreen . maximized))
-   #+end_src
-
-   Enable line numbers and customize their format.
-
-   #+begin_src emacs-lisp
-   ;; Show line numbers except for certain modes
-   (column-number-mode)
-   (global-display-line-numbers-mode t)
-   
-   ;; Disable line numbers for some modes
-   (dolist (mode '(org-mode-hook
-                   erc-mode-hook
-                   term-mode-hook
-		   shell-mode-hook
-                   eshell-mode-hook
-                   vterm-mode-hook))
-     (add-hook mode (lambda () (display-line-numbers-mode 0))))
-   #+end_src
-
-   Don’t warn for large files (shows up when launching videos)
-
-   #+begin_src emacs-lisp
-   (setq large-file-warning-threshold nil)
-   #+end_src
-
-   Don't warn for symlinked files
-
-   #+begin_src emacs-lisp
-   (setq vc-follow-symlinks t)
-   #+end_src
-
-** Theme
-
-   I usually try out the different [[https://github.com/hlissner/emacs-doom-themes][DOOM Themes]].
-
-   #+begin_src emacs-lisp
-   (use-package doom-themes
-     :init (load-theme 'doom-palenight t))
-   #+end_src
-
-** Font
-
-   I use the Fira Code font.
-
-   #+begin_src emacs-lisp
-   ;; Set default font
-   (set-face-attribute 'default nil :font "Fira Code" :height 110)
-   
-   ;; Set fixed pitch font
-   (set-face-attribute 'fixed-pitch nil :font "Fira Code" :height 110)
-   
-   ;; Set the variable pitch font
-   (set-face-attribute 'variable-pitch nil :font "Cantarell" :height 110)
-   #+end_src
-
-** Mode Line
-
-*** Basic Customization
-
-    #+begin_src emacs-lisp
-    (setq display-time-format "%l:%M %p %b %y"
-          display-time-default-load-average nil)
-
-    (display-time-mode 1)
-    #+end_src
-
-*** Doom Modeline
-
-    *NOTE*: You must run =M-x RET all-the-icons-install-fonts RET= after installing this package.
-
-    #+begin_src emacs-lisp
-    (use-package doom-modeline
-      :init (doom-modeline-mode 1)
-      :custom
-      (doom-modeline-buffer-file-name-style 'truncate-except-project))
-    #+end_src
-
-*** Notifications
-
-    [[https://github.com/jwiegley/alert][alert]] is a great library for showing notifications from other packages in a variety of ways. For now I just use it to surface desktop notifications from package code.
-
-    #+begin_src emacs-lisp
-    (use-package alert
-      :commands alert
+    (use-package general
       :config
-      (setq alert-default-style 'notifications))
-    #+end_src
+      (general-create-definer av/leader-keys
+        :keymaps '(normal insert visual emacs)
+        :prefix "SPC"
+        :global-prefix "C-SPC")
 
-*** Auto-Saving Changed Files
+      (av/leader-keys
+        "t"  '(:ignore t :which-key "toggles")
+        "tt" '(counsel-load-theme :which-key "choose theme")))
 
-    #+begin_src emacs-lisp
-    (use-package super-save
-      :defer 1
-      :diminish super-save-mode
+    (use-package evil
+      :init
+      (setq evil-want-integration t)
+      (setq evil-want-keybinding nil)
+      (setq evil-want-C-u-scroll t)
+      (setq evil-want-C-i-jump nil)
       :config
-      (super-save-mode +1)
-      (setq super-save-auto-save-when-idle t))
-    #+end_src
+      (evil-mode 1)
+      (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+      (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
 
-*** Auto-Reverting Changed Files
+      ;; Use visual line motions even outside of visual-line-mode buffers
+      (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+      (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
 
-    #+begin_src emacs-lisp
-    (global-auto-revert-mode 1)
-    #+end_src
+      (evil-set-initial-state 'messages-buffer-mode 'normal)
+      (evil-set-initial-state 'dashboard-mode 'normal))
 
-*** UI Toggles
-
-    #+begin_src emacs-lisp
-    (av/leader-keys
-      "t" '(:ignore t :which-key "toggles")
-      "tt" '(counsel-load-theme :which-key "load theme"))
-    #+end_src
-
-*** Highlight Matching Braces
-
-    #+begin_src emacs-lisp
-    (use-package paren
+    (use-package evil-collection
+      :after evil
       :config
-      (set-face-attribute 'show-paren-match-expression nil :background "#363e4a")
-      (show-paren-mode 1))
-    #+end_src
+      (evil-collection-init))
 
-* Editing Configuration
-
-** Tab Widths
-
-   Default to an indentation size of 2 spaces since it’s the norm for pretty much every language I use.
-
-   #+begin_src emacs-lisp
-   (setq-default tab-width 2)
-   (setq-default evil-shift-width tab-width)
-   #+end_src
-
-** Use spaces instead of tabs for indentation
-
-   #+begin_src emacs-lisp
-   (setq-default indent-tabs-mode nil)
-   #+end_src
-
-** Commenting Lines
-
-   #+begin_src emacs-lisp
-   (use-package evil-nerd-commenter
-     :bind ("M-/" . evilnc-comment-or-uncomment-lines))
-   #+end_src
-
-* Configuration Files
-
-** Helpers
-
-   #+begin_src emacs-lisp
-   (defun av/org-file-jump-to-heading (org-file heading-title)
-     (interactive)
-     (find-file (expand-file-name org-file))
-     (goto-char (point-min))
-     (search-forward (concat "* " heading-title))
-     (org-overview)
-     (org-reveal)
-     (org-show-subtree)
-     (forward-line))
-
-   (defun av/org-file-show-headings (org-file)
-     (interactive)
-     (find-file (expand-file-name org-file))
-     (counsel-org-goto)
-     (org-overview)
-     (org-reveal)
-     (org-show-subtree)
-     (forward-line))
-   #+end_src
-
-** Bindings
-
-   #+begin_src emacs-lisp
-   (av/leader-keys
-     "c" '(:ignore t :which-key "config files")
-     "ce" '(:ingore t :which-key "emacs config")
-     "ceb" '((lambda () (interactive) (find-file "~/Emacs.org")) :which-key "open base config"))
-   #+end_src
-
-* Stateful Keymaps with Hydra
-
-  #+begin_src emacs-lisp
-  (use-package hydra)
-
-  (defhydra hydra-text-scale ()
-    "scale text"
-    ("j" text-scale-increase "in")
-    ("k" text-scale-decrease "out")
-    ("f" nil "finish" :exit t))
-
-  (av/leader-keys
-    "ts" '(hydra-text-scale/body :which-key "scale text"))
   #+end_src
 
-* Better Completions with Ivy
+* UI Configuration
 
-  I currently use Ivy, Counsel, and Swiper to navigate around files, buffers, and projects super quickly. Here are some workflow notes on how to best use Ivy:
+** Colour Theme
 
-  - While in an Ivy minibuffer, you can search within the current results by using S-Space.
-  - To see actions for the selected minibuffer item, use M-o and then press the action’s key.
-  - Super useful: Use C-c C-o to open ivy-occur to open the search results in a separate buffer. From there you can click any item to perform the ivy action.
-
-  #+begin_src emacs-lisp
-  (use-package ivy
-    :diminish
-    :bind (("C-s" . swiper)
-           :map ivy-minibuffer-map
-           ("TAB" . ivy-alt-done)	
-           ("C-l" . ivy-alt-done)
-           ("C-j" . ivy-next-line)
-           ("C-k" . ivy-previous-line)
-           :map ivy-switch-buffer-map
-           ("C-k" . ivy-previous-line)
-           ("C-l" . ivy-done)
-           ("C-d" . ivy-switch-buffer-kill)
-           :map ivy-reverse-i-search-map
-           ("C-k" . ivy-previous-line)
-           ("C-d" . ivy-reverse-i-search-kill))
-    :init
-    (ivy-mode 1))
-
-  (use-package counsel
-    :bind (("M-x" . counsel-M-x)
-           ("C-x b" . counsel-switch-buffer)
-           ("C-x C-f" . counsel-find-file)
-           :map minibuffer-local-map
-           ("C-r" . 'counsel-minibuffer-history)))
-
-  (use-package ivy-rich
-    :init
-    (ivy-rich-mode 1))
-  #+end_src
-
-* Set Margins for Modes
-
-  #+begin_src emacs-lisp
-  (defun av/org-mode-visual-fill ()
-    (setq visual-fill-column-width 100
-          visual-fill-column-center-text t)
-    (visual-fill-column-mode 1))
-
-  (use-package visual-fill-column
-    :hook (org-mode . av/org-mode-visual-fill))
-  #+end_src
-
-* File Browsing
-
-** Dired
+   [[https://github.com/hlissner/emacs-doom-themes][doom-themes]] is a great set of themes with a lot of variety and support for many different Emacs modes. Taking a look at the [[https://github.com/hlissner/emacs-doom-themes/tree/screenshots][screenshots]] might help you decide which one you like best. You can also press =SPC t t= or =C-SPC t t= to choose between them easily.
 
    #+begin_src emacs-lisp
-   (use-package dired
-     :ensure nil
-     :commands (dired dired-jump)
-     :bind (("C-x C-j" . dired-jump))
-     :custom ((dired-listing-switches "-agho --group-directories-first"))
-     :config
-     (evil-collection-define-key 'normal 'dired-mode-map
-     "h" 'dired-single-up-directory
-     "l" 'dired-single-buffer))
 
-   (use-package dired-single)
-   
-   (use-package all-the-icons-dired
-     :hook (dired-mode . all-the-icons-dired-mode))
+     (use-package doom-themes
+       :init (load-theme 'doom-palenight t))
 
-   (use-package dired-open
-     :config
-     ;; Doesn't work as expected!
-     ;;(add-to-list 'dired-open-functions #'dired-open-xdg t)
-     (setq dired-open-extensions '(("png" . "feh")
-                                   ("mkv" . "mpv"))))
+   #+end_src
 
-   (use-package dired-hide-dotfiles
-     :hook (dired-mode . dired-hide-dotfiles-mode)
-     :config
-     (evil-collection-define-key 'normal 'dired-mode-map
-       "H" 'dired-hide-dotfiles-mode))
+** Better Modeline
+
+   [[https://github.com/seagle0128/doom-modeline][doom-modeline]] is a very attractive and rich (yet still minimal) mode line configuration for Emacs. The default configuration is quite good but you can check out the [[https://github.com/seagle0128/doom-modeline#customize][configuration options]] for more things you can enable or disable.
+
+   *NOTE*: The first time you load your configuration on a new machine, you’ll need to run =M-x all-the-icons-install-fonts= so that mode line icons display correctly.
+
+   #+begin_src emacs-lisp
+
+     (use-package doom-modeline
+       :init (doom-modeline-mode 1))
+
+   #+end_src
+
+** Which Key
+
+   [[https://github.com/justbur/emacs-which-key][which-key]] is a useful UI panel that appears when you start pressing any key binding in Emacs to offer you all possible completions for the prefix. For example, if you press =C-c= (hold control and press the letter =c=), a panel will appear at the bottom of the frame displaying all of the bindings under that prefix and which command they run. This is very useful for learning the possible key bindings in the mode of your current buffer.
+
+   #+begin_src emacs-lisp
+
+     (use-package which-key
+       :init (which-key-mode)
+       :diminish which-key-mode
+       :config
+       (setq which-key-idle-delay 0.3))
+
+   #+end_src
+
+** Ivy and Counsel
+
+   [[https://oremacs.com/swiper/][Ivy]] is an excellent completion framework for Emacs. It provides a minimal yet powerful selection menu that appears when you open files, switch buffers, and for many other tasks in Emacs. Counsel is a customized set of commands to replace `find-file` with `counsel-find-file`, etc which provide useful commands for each of the default completion commands.
+
+   [[https://github.com/Yevgnen/ivy-rich][ivy-rich]] adds extra columns to a few of the Counsel commands to provide more information about each item.
+
+   #+begin_src emacs-lisp
+
+     (use-package ivy
+       :diminish
+       :bind (("C-s" . swiper)
+              :map ivy-minibuffer-map
+              ("TAB" . ivy-alt-done)	
+              ("C-l" . ivy-alt-done)
+              ("C-j" . ivy-next-line)
+              ("C-k" . ivy-previous-line)
+              :map ivy-switch-buffer-map
+              ("C-k" . ivy-previous-line)
+              ("C-l" . ivy-done)
+              ("C-d" . ivy-switch-buffer-kill)
+              :map ivy-reverse-i-search-map
+              ("C-k" . ivy-previous-line)
+              ("C-d" . ivy-reverse-i-search-kill))
+       :init
+       (ivy-mode))
+
+     (use-package ivy-rich
+       :init
+       (ivy-rich-mode 1))
+
+     (use-package counsel
+       :bind (("M-x" . counsel-M-x)
+              ("C-x b" . counsel-ibuffer)
+              ("C-x C-f" . counsel-find-file)
+              :map minibuffer-local-map
+              ("C-r" . 'counsel-minibuffer-history)))
+
+   #+end_src
+
+** Helpful Help Commands
+
+   [[https://github.com/Wilfred/helpful][Helpful]] adds a lot of very helpful (get it?) information to Emacs’ =describe-= command buffers. For example, if you use =describe-function=, you will not only get the documentation about the function, you will also see the source code of the function and where it gets used in other places in the Emacs configuration. It is very useful for figuring out how things work in Emacs.
+
+   #+begin_src emacs-lisp
+
+     (use-package helpful
+       :custom
+       (counsel-describe-function-function #'helpful-callable)
+       (counsel-describe-variable-function #'helpful-variable)
+       :bind
+       ([remap describe-function] . counsel-describe-function)
+       ([remap describe-command] . helpful-command)
+       ([remap describe-variable] . counsel-describe-variable)
+       ([remap describe-key] . helpful-key))
+
+   #+end_src
+
+** Text Scaling
+
+   This is an example of using [[https://github.com/abo-abo/hydra][Hydra]] to design a transient key binding for quickly adjusting the scale of the text on screen. We define a hydra that is bound to =C-SPC t= and, once activated, =j= and =k= increase and decrease the text scale. You can press any other key (or =f= specifically) to exit the transient key map.
+
+   #+begin_src emacs-lisp
+
+      (use-package hydra)
+
+      (defhydra hydra-text-scale (:timeout 4)
+        "scale text"
+        ("j" text-scale-increase "in")
+        ("k" text-scale-decrease "out")
+        ("f" nil "finished" :exit t))
+
+     (av/leader-keys
+       "ts" '(hydra-text-scale/body :which-key "scale text"))
+
    #+end_src
 
 * Org Mode
 
-** Org Configuration
+  [[http://orgmode.com][Org Mode]] is one of the hallmark features of Emacs. It is a rich document editor, project planner, task and time tracker, blogging engine, and literate coding utility all wrapped up in one package.
 
-   Set up Org Mode with a baseline configuration. The following sections will add more things to it.
+** Better Font Faces
+
+   The =av/org-font-setup= function configures various text faces to tweak the sizes of headings and use variable width fonts in most cases so that it looks more like we’re editing a document in =org-mode=. We switch back to fixed width (monospace) fonts for code blocks and tables so that they display correctly.
 
    #+begin_src emacs-lisp
-   (defun av/org-mode-setup ()
-     (variable-pitch-mode 1)
-     (visual-line-mode 1))
-   
-   (use-package org
-     :hook (org-mode . av/org-mode-setup)
-     :config
-     (setq org-ellipsis " ▾")
-     
+
+     (defun av/org-font-setup ()
+       ;; Replace list hyphen with dot
+       (font-lock-add-keywords 'org-mode
+                               '(("^ *\\([-]\\) "
+                                  (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
+       ;; Set faces for heading levels
+       (dolist (face '((org-level-1 . 1.2)
+                       (org-level-2 . 1.1)
+                       (org-level-3 . 1.05)
+                       (org-level-4 . 1.0)
+                       (org-level-5 . 1.1)
+                       (org-level-6 . 1.1)
+                       (org-level-7 . 1.1)
+                       (org-level-8 . 1.1)))
+         (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
+
+       ;; Ensure that anything that should be fixed-pitch in Org files appears that way
+       (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
+       (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
+       (set-face-attribute 'org-table nil   :inherit '(shadow fixed-pitch))
+       (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+       (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+       (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+       (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
+
+   #+end_src
+
+** Basic Config
+
+   This section contains the basic configuration for =org-mode= plus the configuration for Org agendas and capture templates.
+
+   #+begin_src emacs-lisp
+
+     (defun av/org-mode-setup ()
+       (org-indent-mode 1)
+       (variable-pitch-mode 1)
+       (visual-line-mode 1))
+
+     (use-package org
+       :ensure org
+       :pin org
+       :hook (org-mode . av/org-mode-setup)
+       :config
+       (setq org-ellipsis " ▾")
+
+       (setq org-agenda-start-with-log-mode t)
+       (setq org-log-done 'time)
+       (setq org-log-into-drawer t)
+
+       (setq org-agenda-files
+             '("~/Documents/OrgFiles/Tasks.org"
+               "~/Documents/OrgFiles/Habits.org"
+               "~/Documents/OrgFiles/Birthdays.org"))
+
+       (require 'org-habit)
+       (add-to-list 'org-modules 'org-habit)
+       (setq org-habit-graph-column 60)
+
+       (setq org-todo-keywords
+         '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
+           (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVE(a)" "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)" "|" "COMPLETED(c)" "CANC(k@)")))
+
+       (setq org-refile-targets
+         '(("Archive.org" :maxlevel . 1)
+           ("Tasks.org" :maxlevel . 1)))
+
+       ;; Save Org buffers after refiling!
+       (advice-add 'org-refile :after 'org-save-all-org-buffers)
+
+       (setq org-tag-alist
+         '((:startgroup)
+           ;; Put mutually exclusive tags here
+           (:endgroup)
+           ("@errand" . ?E)
+           ("@home" . ?H)
+           ("@work" . ?W)
+           ("agenda" . ?a)
+           ("planning" . ?p)
+           ("publish" . ?P)
+           ("batch" . ?b)
+           ("note" . ?n)
+           ("idea" . ?i)))
+
+       ;; Configure custom agenda views
+       (setq org-agenda-custom-commands
+        '(("d" "Dashboard"
+          ((agenda "" ((org-deadline-warning-days 7)))
+           (todo "NEXT"
+             ((org-agenda-overriding-header "Next Tasks")))
+           (tags-todo "agenda/ACTIVE" ((org-agenda-overriding-header "Active Projects")))))
+
+          ("n" "Next Tasks"
+          ((todo "NEXT"
+            ((org-agenda-overriding-header "Next Tasks")))))
+
+          ("W" "Work Tasks" tags-todo "+work-email")
+
+          ;; Low-effort next actions
+          ("e" tags-todo "+TODO=\"NEXT\"+Effort<15&+Effort>0"
+           ((org-agenda-overriding-header "Low Effort Tasks")
+            (org-agenda-max-todos 20)
+            (org-agenda-files org-agenda-files)))
+
+          ("w" "Workflow Status"
+           ((todo "WAIT"
+                  ((org-agenda-overriding-header "Waiting on External")
+                   (org-agenda-files org-agenda-files)))
+            (todo "REVIEW"
+                  ((org-agenda-overriding-header "In Review")
+                   (org-agenda-files org-agenda-files)))
+            (todo "PLAN"
+                  ((org-agenda-overriding-header "In Planning")
+                   (org-agenda-todo-list-sublevels nil)
+                   (org-agenda-files org-agenda-files)))
+            (todo "BACKLOG"
+                  ((org-agenda-overriding-header "Project Backlog")
+                   (org-agenda-todo-list-sublevels nil)
+                   (org-agenda-files org-agenda-files)))
+            (todo "READY"
+                  ((org-agenda-overriding-header "Ready for Work")
+                   (org-agenda-files org-agenda-files)))
+            (todo "ACTIVE"
+                  ((org-agenda-overriding-header "Active Projects")
+                   (org-agenda-files org-agenda-files)))
+            (todo "COMPLETED"
+                  ((org-agenda-overriding-header "Completed Projects")
+                   (org-agenda-files org-agenda-files)))
+            (todo "CANC"
+                  ((org-agenda-overriding-header "Cancelled Projects")
+                   (org-agenda-files org-agenda-files)))))))
+
+       (setq org-capture-templates
+        `(("t" "Tasks / Projects")
+          ("tt" "Task" entry (file+olp "~/Documents/OrgFiles/Tasks.org" "Inbox")
+               "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
+
+          ("j" "Journal Entries")
+          ("jj" "Journal" entry
+               (file+olp+datetree "~/Documents/OrgFiles/Journal.org")
+               "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
+               ;; ,(dw/read-file-as-string "~/Notes/Templates/Daily.org")
+               :clock-in :clock-resume
+               :empty-lines 1)
+         ("jm" "Meeting" entry
+               (file+olp+datetree "~/Documents/OrgFiles/Journal.org")
+               "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
+               :clock-in :clock-resume
+               :empty-lines 1)
+
+         ("w" "Workflows")
+         ("we" "Checking Email" entry (file+olp+datetree "~/Documents/OrgFiles/Journal.org")
+              "* Checking Email :email:\n\n%?" :clock-in :clock-resume :empty-lines 1)
+
+         ("m" "Metrics Capture")
+         ("mw" "Weight" table-line (file+headline "~/Documents/OrgFiles/Metrics.org" "Weight")
+          "| %U | %^{Weight} | %^{Notes} |" :kill-buffer t)))
+
+       (define-key global-map (kbd "C-c j")
+         (lambda () (interactive) (org-capture nil "jj")))
+       (av/org-font-setup))
+
+   #+end_src
+
+*** Nicer Heading Bullets
+
+    [[https://github.com/sabof/org-bullets][org-bullets]] replaces the heading stars in =org-mode= buffers with nicer looking characters that you can control. Another option for this is [[http://github.com/integral-dw/org-superstar-mode][org-superstar-mode]]
+
+    #+begin_src emacs-lisp
+
+      (use-package org-bullets
+        :after org
+        :hook (org-mode . org-bullets-mode)
+        :custom
+        (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+
+    #+end_src
+    
+*** Center Org Buffers
+
+    We use [[https://github.com/joostkremers/visual-fill-column][visual-fill-column]] to center =org-mode= buffers for a more pleasing writing experience as it centers the contents of the buffer horizontally to seem more like you are editing a document. This is really a matter of personal preference so you can remove the block below if you don’t like the behavior.
+
+    #+begin_src emacs-lisp
+
+      (defun av/org-mode-visual-fill ()
+        (setq visual-fill-column-width 100
+              visual-fill-column-center-text t)
+        (visual-fill-column-mode 1))
+
+      (use-package visual-fill-column
+        :hook (org-mode . av/org-mode-visual-fill))
+
+    #+end_src
+
+** Configure Babel Languages
+
+   To execute or export code in =org-mode= code blocks, you’ll need to set up =org-babel-load-languages= for each language you’d like to use. [[https://orgmode.org/worg/org-contrib/babel/languages.html][This page]] documents all of the languages that you can use with =org-babel=.
+
+   #+begin_src emacs-lisp
+
      (org-babel-do-load-languages
        'org-babel-load-languages
        '((emacs-lisp . t)
-         (java . t)
-	       (haskell . t)
-	       (shell . t)
-	       (python . t)))
+         (python . t)))
 
      (push '("conf-unix" . conf-unix) org-src-lang-modes)
+
    #+end_src
 
-** Automatically Tangle on Save
+** Structure Templates
+
+   Org Mode’s [[https://orgmode.org/manual/Structure-Templates.html][structure templates]] feature enables you to quickly insert code blocks into your Org files in combination with =org-tempo= by typing =<= followed by the template name like =el= or =py= and then press =TAB=. For example, to insert an empty =emacs-lisp= block below, you can type =<el= and press =TAB= to expand into such a block.
+
+   You can add more =src= block templates below by copying one of the lines and changing the two strings at the end, the first to be the template name and the second to contain the name of the language [[https://orgmode.org/worg/org-contrib/babel/languages.html][as it is known by Org Babel]].
 
    #+begin_src emacs-lisp
-   ;; Since we don't want to disable org-confirm-babel-evaluate all
-   ;; of the time, do it around the after-save-hook
-   (defun av/org-babel-tangle-dont-ask ()
-   ;; Dynamic scoping to the rescue
-   (let ((org-confirm-babel-evaluate nil))
-        (org-babel-tangle)))
 
-   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'av/org-babel-tangle-dont-ask
-                                                 'run-at-end 'only-in-org-mode)))
+     ;; This is needed as of Org 9.2
+     (require 'org-tempo)
+
+     (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+     (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+     (add-to-list 'org-structure-template-alist '("py" . "src python"))
+
    #+end_src
 
-** Fonts and Bullets
+** Auto-tangle Org Files
+
+   This snippet adds a hook to =org-mode= buffers so that =av/org-babel-tangle-config= gets executed each time such a buffer gets saved. This function checks to see if the file being saved is an org file, and if so, automatically exports the configuration here to the associated output files
 
    #+begin_src emacs-lisp
-     ;; Replace list hyphen with dot
-     (font-lock-add-keywords 'org-mode
-                             '(("^ *\\([-]\\) "
-                                 (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
-     ;; Set faces for heading levels
-     (dolist (face '((org-level-1 . 1.2)
-                     (org-level-2 . 1.1)
-                     (org-level-3 . 1.0)
-                     (org-level-4 . 1.0)
-                     (org-level-5 . 0.9)
-                     (org-level-6 . 0.8)
-                     (org-level-7 . 0.7)
-                     (org-level-8 . 0.6)))
-       (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
+     (defun av/org-babel-tangle-config ()
+       ;; Dynamic scoping to the rescue
+       (let ((org-confirm-babel-evaluate nil))
+         (org-babel-tangle)))
 
-     ;; Ensure that anything that should be fixed-pitch in Org files appears that way
-     (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
-     (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
-     (set-face-attribute 'org-table nil   :inherit '(shadow fixed-pitch))
-     (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-     (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-     (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
-     (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch)
-     
-     (use-package org-bullets
-       :after org
-       :hook (org-mode . org-bullets-mode)
-       :custom
-       (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+     (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'av/org-babel-tangle-config)))
+
    #+end_src
 
-** Org File Paths
+** Presentations
 
-   #+begin_src emacs-lisp
-   (setq org-agenda-files
-	   '("~/Documents/OrgFiles/Tasks.org"
-	     "~/Documents/OrgFiles/Events.org"
-	     "~/Documents/OrgFiles/Habits.org"))
-   #+end_src
+I use =org-tree-slide= to present org documents.
 
-** Agenda
+#+begin_src emacs-lisp
 
-   #+begin_src emacs-lisp
-   (setq org-agenda-start-with-log-mode t)
+  (use-package org-tree-slide)
 
-   (require 'org-habit)
-   (add-to-list 'org-modules 'org-habit)
+#+end_src
 
-   ;; Configure custom agenda views
-   (setq org-agenda-custom-commands
-     '(("d" "Dashboard"
-        ((agenda "" ((org-deadline-warning-days 7)))
-         (todo "NEXT"
-           ((org-agenda-overriding-header "Next Tasks")))
-         (tags-todo "agenda/ACTIVE" ((org-agenda-overriding-header "Active Projects")))))
-
-       ("n" "Next Tasks"
-        ((todo "NEXT"
-          ((org-agenda-overriding-header "Next Tasks")))))
-
-       ("W" "Work Tasks" tags-todo "+work-email")
-
-       ;; Low-effort next actions
-       ("e" tags-todo "+TODO=\"NEXT\"+Effort<15&+Effort>0"
-        ((org-agenda-overriding-header "Low Effort Tasks")
-         (org-agenda-max-todos 20)
-         (org-agenda-files org-agenda-files)))
-
-       ("w" "Workflow Status"
-        ((todo "WAIT"
-           ((org-agenda-overriding-header "Waiting on External")
-            (org-agenda-files org-agenda-files)))
-         (todo "REVIEW"
-           ((org-agenda-overriding-header "In Review")
-            (org-agenda-files org-agenda-files)))
-         (todo "PLAN"
-           ((org-agenda-overriding-header "In Planning")
-            (org-agenda-todo-list-sublevels nil)
-            (org-agenda-files org-agenda-files)))
-         (todo "BACKLOG"
-           ((org-agenda-overriding-header "Project Backlog")
-            (org-agenda-todo-list-sublevels nil)
-            (org-agenda-files org-agenda-files)))
-         (todo "READY"
-           ((org-agenda-overriding-header "Ready for Work")
-            (org-agenda-files org-agenda-files)))
-         (todo "ACTIVE"
-           ((org-agenda-overriding-header "Active Projects")
-            (org-agenda-files org-agenda-files)))
-         (todo "COMPLETED"
-           ((org-agenda-overriding-header "Completed Projects")
-            (org-agenda-files org-agenda-files)))
-         (todo "CANC"
-           ((org-agenda-overriding-header "Cancelled Projects")
-            (org-agenda-files org-agenda-files)))))))
-   #+end_src
-
-** Tags
-
-   #+begin_src emacs-lisp
-   (setq org-tag-alist
-     '((:startgroup)
-        ; Put mutually exclusive tags here
-        (:endgroup)
-	      ("@errand" . ?E)
-	      ("@home" . ?H)
-	      ("@work" . ?W)
-	      ("agenda" . ?a)
-	      ("planning" . ?p)
-	      ("publish" . ?P)
-	      ("batch" . ?b)
-	      ("note" . ?n)
-	      ("idea" . ?i)))
-   #+end_src
-
-** Tasks
-
-   #+begin_src emacs-lisp
-   (setq org-log-done 'time)
-   (setq org-log-into-drawer t)
-   (setq org-habit-graph-column 60)
-   (setq org-todo-keywords
-     '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
-       (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVE(a)" "REVIEW(v)" "WAIT(w@/!)" "HOLD(h)" "|" "COMPLETED(c)" "CANC(k@)")))
-   #+end_src
-
-** Capture Templates
-
-   #+begin_src emacs-lisp
-   (setq org-capture-templates
-     `(("t" "Tasks / Projects")
-       ("tt" "Task" entry (file+olp "~/Documents/OrgFiles/Tasks.org" "Inbox")
-            "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
-
-       ("j" "Journal Entries")
-       ("jj" "Journal" entry
-            (file+olp+datetree "~/Documents/OrgFiles/Journal.org")
-            "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
-            ;; ,(av/read-file-as-string "~/Notes/Templates/Daily.org")
-            :clock-in :clock-resume
-            :empty-lines 1)
-       ("jm" "Meeting" entry
-            (file+olp+datetree "~/Documents/OrgFiles/Journal.org")
-            "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
-            :clock-in :clock-resume
-            :empty-lines 1)
-
-       ("w" "Workflows")
-       ("we" "Checking Email" entry (file+olp+datetree "~/Documents/OrgFiles/Journal.org")
-            "* Checking Email :email:\n\n%?" :clock-in :clock-resume :empty-lines 1)
-
-       ("m" "Metrics Capture")
-       ("mw" "Weight" table-line (file+headline "~/Documents/OrgFiles/Metrics.org" "Weight")
-        "| %U | %^{Weight} | %^{Notes} |" :kill-buffer t)))
-   #+end_src
-
-** Block Templates
-
-   These templates enable you to type things like =<el= and then hit =Tab= to expand the template. More documentation can be found at the Org Mode [[https://orgmode.org/manual/Easy-templates.html][Easy Templates]] documentation page.
-
-   #+begin_src emacs-lisp
-   ;; This is needed as of Org 9.2
-   (require 'org-tempo)
-   
-   (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-   (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-   (add-to-list 'org-structure-template-alist '("py" . "src python"))
-   (add-to-list 'org-structure-template-alist '("java" . "src java :classname Java"))
-   #+end_src
-
-** Bindings
-
-   #+begin_src emacs-lisp
-   (use-package evil-org
-     :after org
-     :hook ((org-mode . evil-org-mode)
-            (org-agenda-mode . evil-org-mode)
-            (evil-org-mode . (lambda () (evil-org-set-key-theme '(navigation todo insert textobjects additional)))))
-     :config
-     (require 'evil-org-agenda)
-     (evil-org-agenda-set-keys))
-     
-     (av/leader-keys
-       "o"   '(:ignore t :which-key "org mode")
-       
-       "oi"  '(:ignore t :which-key "insert")
-       "oil" '(org-insert-link :which-key "insert link")
-       
-       "on"  '(org-toggle-narrow-to-subtree :which-key "toggle narrow")
-       
-       "os"  '(av/counsel-rg-org-files :which-key "search notes")
-       
-       "oa"  '(org-agenda :which-key "status")
-       "oc"  '(org-capture t :which-key "capture")
-       "ox"  '(org-export-dispatch t :which-key "export"))
-   #+end_src
-
-** End =use-package org-mode=
-
-   #+begin_src emacs-lisp
-   ;; This ends the use-package org mode block
-   )
-   #+end_src
-
-** Update Table of Contents on Save
-
-   It’s nice to have a table of contents section for long literate configuration files (like this one!) so I use =org-make-toc= to automatically update the ToC in any header with a property named =TOC=.
-
-   #+begin_src emacs-lisp
-   (use-package org-make-toc
-     :hook (org-mode . org-make-toc-mode))
-   #+end_src
-
-** Use Org Mode for Presentations
-   
-   #+begin_src emacs-lisp
-   (use-package org-tree-slide
-     :custom
-     (org-image-actual-width nil))
-   #+end_src
 * Development
-
-  Configuration for various programming languages and dev tools that I use.
-
-** Git
-
-   I use Magit as a GUI to manage git repositories.
-
-   #+begin_src emacs-lisp
-   (use-package magit
-     :custom
-     (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
-   
-   (use-package evil-magit
-     :after magit)
-
-   (av/leader-keys
-     "g"   '(:ignore t :which-key "git")
-     "gs"  'magit-status
-     "gd"  'magit-diff-unstaged
-     "gc"  'magit-branch-or-checkout
-     "gl"   '(:ignore t :which-key "log")
-     "glc" 'magit-log-current
-     "glf" 'magit-log-buffer-file
-     "gb"  'magit-branch
-     "gP"  'magit-push-current
-     "gp"  'magit-pull-branch
-     "gf"  'magit-fetch
-     "gF"  'magit-fetch-all
-     "gr"  'magit-rebase)
-   #+end_src
 
 ** Projectile
 
-   #+begin_src emacs-lisp
-   (use-package projectile
-     :init
-     (projectile-mode)
-     (setq projectile-project-search-path '("~/Documents/Projects/"
-					    "~/Documents/pkgs/suckless/"
-					    "~/Documents/pkgs/manualbuild/"
-					    "~/Documents/Courses/"))
-     (setq projectile-switch-project-action #'projectile-dired)
-     :custom ((projectile-completion-system 'ivy)))
-  
-   (use-package counsel-projectile
-     :init (counsel-projectile-mode))
-
-   (av/leader-keys
-    "p" '(projectile-command-map :which-key "projectile"))
-   #+end_src
-
-** More Helpful Help Pages
+   [[https://projectile.mx][Projectile]] is a project management library for Emacs which makes it a lot easier to navigate around code projects for various languages. Many packages integrate with Projectile so it’s a good idea to have it installed even if you don’t use its commands directly.
 
    #+begin_src emacs-lisp
-   (use-package helpful
-     :custom
-     (counsel-describe-function-function #'helpful-callable)
-     (counsel-describe-variable-function #'helpful-variable)
-     :bind
-     ([remap describe-function] . counsel-describe-function)
-     ([remap describe-command] . helpful-command)
-     ([remap describe-variable] . counsel-describe-variable)
-     ([remap describe-key] . helpful-key))
+
+     (use-package projectile
+       :diminish projectile-mode
+       :config (projectile-mode)
+       :custom ((projectile-completion-system 'ivy))
+       :bind-keymap
+       ("C-c p" . projectile-command-map)
+       :init
+       ;; NOTE: Set this to the folder where you keep your Git repos!
+       (setq projectile-project-search-path '("~/Documents/Projects"
+                                              "~/Documents/pkgs/manualbuild"
+                                              "~/Documents/pkgs/aur"
+                                              "~/Documents/pkgs/suckless")))
+
+     (use-package counsel-projectile
+       :config (counsel-projectile-mode))
+
    #+end_src
 
-** Productivity
+** Magit
 
-*** Snippets
+   [[https://magit.vc][Magit]] is the best Git interface I’ve ever used. Common Git operations are easy to execute quickly using Magit’s command panel system.
 
-    #+begin_src emacs-lisp
-    (use-package yasnippet
-      :hook (prog-mode . yas-minor-mode)
+   #+begin_src emacs-lisp
+
+     (use-package magit
+       :custom
+       (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+
+   #+end_src
+
+** Rainbow Delimeters
+
+   [[https://github.com/Fanael/rainbow-delimeters][rainbow-delimiters]] is useful in programming modes because it colorizes nested parentheses and brackets according to their nesting depth. This makes it a lot easier to visually match parentheses in Emacs Lisp code without having to count them yourself.
+
+   #+begin_src emacs-lisp
+
+     (use-package rainbow-delimiters
+       :hook (prog-mode . rainbow-delimiters-mode))
+
+   #+end_src
+
+** Commenting
+
+   Emacs’ built in commenting functionality =comment-dwim= (usually bound to =M-;=) doesn’t always comment things in the way you might expect so we use [[https://github.com/redguardtoo/evil-nerd-commenter][evil-nerd-commenter]] to provide a more familiar behavior. I’ve bound it to =M-/= since other editors sometimes use this binding but you could also replace Emacs’ =M-;= binding with this command.
+
+   #+begin_src emacs-lisp
+
+     (use-package evil-nerd-commenter
+       :bind ("M-/" . evilnc-comment-or-uncomment-lines))
+
+   #+end_src
+
+* Terminals
+
+** term-mode
+
+   =term-mode= is a built-in terminal emulator in Emacs.  Because it is written in Emacs Lisp, you can start using it immediately with very little configuration.  If you are on Linux or macOS, =term-mode= is a great choice to get started because it supports fairly complex terminal applications (=htop=, =vim=, etc) and works pretty reliably.  However, because it is written in Emacs Lisp, it can be slower than other options like =vterm=.  The speed will only be an issue if you regularly run console apps with a lot of output.
+
+One important thing to understand is =line-mode= versus =char-mode=.  =line-mode= enables you to use normal Emacs keybindings while moving around in the terminal buffer while =char-mode= sends most of your keypresses to the underlying terminal.  While using =term-mode=, you will want to be in =char-mode= for any terminal applications that have their own keybindings.  If you're just in your usual shell, =line-mode= is sufficient and feels more integrated with Emacs.
+
+With =evil-collection= installed, you will automatically switch to =char-mode= when you enter Evil's insert mode (press =i=).  You will automatically be switched back to =line-mode= when you enter Evil's normal mode (press =ESC=).
+
+Run a terminal with =M-x term!=
+
+*Useful key bindings:*
+
+- =C-c C-p= / =C-c C-n= - go back and forward in the buffer's prompts (also =[[= and =]]= with evil-mode)
+- =C-c C-k= - Enter char-mode
+- =C-c C-j= - Return to line-mode
+- If you have =evil-collection= installed, =term-mode= will enter char mode when you use Evil's Insert mode
+
+  #+begin_src emacs-lisp
+
+    (use-package term
       :config
-      (yas-reload-all))
-    #+end_src
+      (setq explicit-shell-file-name "bash") ;; Change this to zsh, etc
+      ;;(setq explicit-zsh-args '())         ;; Use 'explicit-<shell>-args for shell-specific args
 
-*** Smart Parens
+      ;; Match the default Bash shell prompt.  Update this if you have a custom prompt
+      (setq term-prompt-regexp "^[^#$%>\n]*[#$%>] *"))
 
-    #+begin_src emacs-lisp
-    (use-package smartparens
-      :hook (prog-mode . smartparens-mode))
-    #+end_src
+  #+end_src
 
-*** Rainbow Delimeters
+*** Better term-mode colors
 
-    #+begin_src emacs-lisp
-    (use-package rainbow-delimiters
-      :hook (prog-mode . rainbow-delimiters-mode))
-    #+end_src
-
-*** Rainbow Mode
-
-    Sets the background of HTML color strings in buffers to be the color mentioned.
+    The =eterm-256color= package enhances the output of =term-mode= to enable handling of a wider range of color codes so that many popular terminal applications look as you would expect them to.  Keep in mind that this package requires =ncurses= to be installed on your machine so that it has access to the =tic= program.  Most Linux distributions come with this program installed already so you may not have to do anything extra to use it.
 
     #+begin_src emacs-lisp
-    (use-package rainbow-mode
-      :defer t
-      :hook (org-mode
-             emacs-lisp-mode
-             web-mode
-             typescript-mode
-             js2-mode))
+
+      (use-package eterm-256color
+        :hook (term-mode . eterm-256color-mode))
+
     #+end_src
 
-* Applications
+** =vterm=
 
-** Binding Prefix
+   [[https://github.com/akermu/emacs-libvterm][vterm]] is an improved terminal emulator package which uses a compiled native module to interact with the underlying terminal applications. This enables it to be much faster than =term-mode= and to also provide a more complete terminal emulation experience.
+
+   Make sure that you have the [[https://github.com/akermu/emacs-libvterm/#requirements][necessary dependencies]] installed before trying to use =vterm= because there is a module that will need to be compiled before you can use it successfully.
 
    #+begin_src emacs-lisp
-   (av/leader-keys
-     "a" '(:ignore t :which-key "apps"))
+
+     (use-package vterm
+       :commands vterm
+       :config
+       (setq term-prompt-regexp "^[^#$%>\n]*[#$%>] *")  ;; Set this to match your custom shell prompt
+       ;;(setq vterm-shell "zsh")                       ;; Set this to customize the shell to launch
+       (setq vterm-max-scrollback 10000))
+
    #+end_src
 
-** Vterm
+** shell-mode
 
-   =vterm= enables the use of fully-fledged terminal applications within Emacs so that I don’t need an external terminal emulator.
+   [[https://www.gnu.org/software/emacs/manual/html_node/emacs/Interactive-Shell.html#Interactive-Shell][shell-mode]] is a middle ground between =term-mode= and Eshell.  It is *not* a terminal emulator so more complex terminal programs will not run inside of it.  It does have much better integration with Emacs because all command input in this mode is handled by Emacs and then sent to the underlying shell once you press Enter.  This means that you can use =evil-mode='s editing motions on the command line, unlike in the terminal emulator modes above.
 
-   #+begin_src emacs-lisp
-   (use-package vterm
-     :commands vterm
-     :config
-     (setq vterm-max-scrollback 10000))
-   #+end_src
+   *Useful key bindings:*
    
+   - =C-c C-p= / =C-c C-n= - go back and forward in the buffer's prompts (also =[[= and =]]= with evil-mode)
+   - =M-p= / =M-n= - go back and forward in the input history
+   - =C-c C-u= - delete the current input string backwards up to the cursor
+   - =counsel-shell-history= - A searchable history of commands typed into the shell
+     
+   One advantage of =shell-mode= on Windows is that it's the only way to run =cmd.exe=, PowerShell, Git Bash, etc from within Emacs.  Here's an example of how you would set up =shell-mode= to run PowerShell on Windows:
+   
+   #+begin_src emacs-lisp
+
+     (when (eq system-type 'windows-nt)
+       (setq explicit-shell-file-name "powershell.exe")
+       (setq explicit-powershell.exe-args '()))
+
+   #+end_src
+
+** Eshell
+
+   [[https://www.gnu.org/software/emacs/manual/html_mono/eshell.html#Contributors-to-Eshell][Eshell]] is Emacs' own shell implementation written in Emacs Lisp.  It provides you with a cross-platform implementation (even on Windows!) of the common GNU utilities you would find on Linux and macOS (=ls=, =rm=, =mv=, =grep=, etc).  It also allows you to call Emacs Lisp functions directly from the shell and you can even set up aliases (like aliasing =vim= to =find-file=).  Eshell is also an Emacs Lisp REPL which allows you to evaluate full expressions at the shell.
+
+   The downsides to Eshell are that it can be harder to configure than other packages due to the particularity of where you need to set some options for them to go into effect, the lack of shell completions (by default) for some useful things like Git commands, and that REPL programs sometimes don't work as well.  However, many of these limitations can be dealt with by good configuration and installing external packages, so don't let that discourage you from trying it!
+
+   *Useful key bindings:*
+
+   - =C-c C-p= / =C-c C-n= - go back and forward in the buffer's prompts (also =[[= and =]]= with evil-mode)
+   - =M-p= / =M-n= - go back and forward in the input history
+   - =C-c C-u= - delete the current input string backwards up to the cursor
+   - =counsel-esh-history= - A searchable history of commands typed into Eshell
+     
+   We will be covering Eshell more in future videos highlighting other things you can do with it.
+   
+   For more thoughts on Eshell, check out these articles by Pierre Neidhardt:
+   - https://ambrevar.xyz/emacs-eshell/index.html
+   - https://ambrevar.xyz/emacs-eshell-versus-shell/index.html
+
+   #+begin_src emacs-lisp
+
+     (defun av/configure-eshell ()
+       ;; Save command history when commands are entered
+       (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
+
+       ;; Truncate buffer for performance
+       (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
+
+       ;; Bind some useful keys for evil-mode
+       (evil-define-key '(normal insert visual) eshell-mode-map (kbd "C-r") 'counsel-esh-history)
+       (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+       (evil-normalize-keymaps)
+
+       (setq eshell-history-size         10000
+             eshell-buffer-maximum-lines 10000
+             eshell-hist-ignoredups t
+             eshell-scroll-to-bottom-on-input t))
+
+       (use-package eshell-git-prompt)
+
+       (use-package eshell
+         :hook (eshell-first-time-mode . av/configure-eshell)
+         :config
+         (with-eval-after-load 'esh-opt
+           (setq eshell-destroy-buffer-when-process-dies t)
+           (setq eshell-visual-commands '("htop" "zsh" "vim")))
+
+         (eshell-git-prompt-use-theme 'powerline))
+
+   #+end_src
+
+* File Management
+
+** Dired
+
+Dired is a built-in file manager for Emacs that does some pretty amazing things! Here are some key bindings you should try out:
+
+*** Key Bindings
+
+**** Navigation
+
+*Emacs* / *Evil*
+- =n= / =j= - next line
+- =p= / =k= - previous line
+- =j= / =J= - jump to file in buffer
+- =RET= - select file or directory
+- =^= - go to parent directory
+- =S-RET= / =g O= - Open file in "other" window
+- =M-RET= - Show file in other window without focusing (previewing files)
+- =g o= (=dired-view-file=) - Open file but in a "preview" mode, close with =q=
+- =g= / =g r= Refresh the buffer with =revert-buffer= after changing configuration (and after filesystem changes!)
+
+**** Marking files
+
+- =m= - Marks a file
+- =u= - Unmarks a file
+- =U= - Unmarks all files in buffer
+- =* t= / =t= - Inverts marked files in buffer
+- =% m= - Mark files in buffer using regular expression
+- =*= - Lots of other auto-marking functions
+- =k= / =K= - "Kill" marked items (refresh buffer with =g= / =g r= to get them back)
+- Many operations can be done on a single file if there are no active marks!
+
+**** Copying and Renaming files
+
+- =C= - Copy marked files (or if no files are marked, the current file)
+- Copying single and multiple files
+- =U= - Unmark all files in buffer
+- =R= - Rename marked files, renaming multiple is a move!
+- =% R= - Rename based on regular expression: =^test= , =old-\&=
+
+*Power command*: =C-x C-q= (=dired-toggle-read-only=) - Makes all file names in the buffer editable directly to rename them!  Press =Z Z= to confirm renaming or =Z Q= to abort.
+
+**** Deleting files
+
+- =D= - Delete marked file
+- =d= - Mark file for deletion
+- =x= - Execute deletion for marks
+- =delete-by-moving-to-trash= - Move to trash instead of deleting permanently
+
+**** Creating and extracting archives
+
+- =Z= - Compress or uncompress a file or folder to (=.tar.gz=)
+- =c= - Compress selection to a specific file
+- =dired-compress-files-alist= - Bind compression commands to file extension
+
+**** Other common operations
+
+- =T= - Touch (change timestamp)
+- =M= - Change file mode
+- =O= - Change file owner
+- =G= - Change file group
+- =S= - Create a symbolic link to this file
+- =L= - Load an Emacs Lisp file into Emacs
+
+*** Configuration
+
+#+begin_src emacs-lisp
+
+  (use-package dired
+    :ensure nil
+    :commands (dired dired-jump)
+    :bind (("C-x C-j" . dired-jump))
+    :custom ((dired-listing-switches "-agho --group-directories-first"))
+    :config
+    (evil-collection-define-key 'normal 'dired-mode-map
+      "h" 'dired-single-up-directory
+      "l" 'dired-single-buffer))
+
+  (use-package dired-single)
+
+  (use-package all-the-icons-dired
+    :hook (dired-mode . all-the-icons-dired-mode))
+
+  (use-package dired-open
+    :config
+    ;; Doesn't work as expected!
+    ;;(add-to-list 'dired-open-functions #'dired-open-xdg t)
+    (setq dired-open-extensions '(("png" . "feh")
+                                  ("mkv" . "mpv"))))
+
+  (use-package dired-hide-dotfiles
+    :hook (dired-mode . dired-hide-dotfiles-mode)
+    :config
+    (evil-collection-define-key 'normal 'dired-mode-map
+      "H" 'dired-hide-dotfiles-mode))
+
+#+end_src
