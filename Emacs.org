@@ -624,6 +624,9 @@ I use =org-make-toc= to automatically make tables of contents.
        :custom
        (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
 
+     (av/leader-keys
+       "g" '(magit-status :which-key "magit"))
+
    #+end_src
 
 ** Rainbow Delimeters
