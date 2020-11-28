@@ -1,6 +1,22 @@
 #+title: Emacs Desktop Environment
 #+property: header-args:emacs-lisp :tangle ./.config/emacs/desktop.el
 
+* Table of Contents
+:PROPERTIES:
+:TOC:      :include all
+:END:
+
+:CONTENTS:
+- [[#table-of-contents][Table of Contents]]
+- [[#window-management][Window Management]]
+  - [[#exwm-configuration][EXWM Configuration]]
+- [[#desktop-environment][Desktop Environment]]
+  - [[#desktop-key-bindings][Desktop Key Bindings]]
+  - [[#launcher-script][Launcher Script]]
+  - [[#keyboard-configuration][Keyboard Configuration]]
+:END:
+
+
 * Window Management
 
 ** EXWM Configuration
