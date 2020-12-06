@@ -22,9 +22,29 @@
 (defun av/exwm-update-class ()
   (exwm-workspace-rename-buffer exwm-class-name))
 
+(defun av/exwm-update-title ()
+  (pcase exwm-class-name
+    ("Chromium" (exwm-workspace-rename-buffer (format            exwm-title)))
+    ("Vimb"     (exwm-workspace-rename-buffer (format "vimb: %s" exwm-title)))))
+
+(defun av/configure-window-by-class ()
+  (interactive)
+  (message "Window '%s' appeared!" exwm-class-name)
+
+  (pcase exwm-class-name
+    ("Chromium" (exwm-workspace-move-window 1) )
+    ("Vimb"     (exwm-workspace-move-window 1) )
+    ("mpv"      (exwm-floating-toggle-floating)
+                (exwm-layout-toggle-mode-line) )))
+
 (use-package exwm
   :config
   (add-hook 'exwm-update-class-hook #'av/exwm-update-class)
+
+  ;; When window title updates, use it to set the buffer name
+  (add-hook 'exwm-update-title-hook #'av/exwm-update-title)
+
+  (add-hook 'exwm-manage-finish-hook #'av/configure-window-by-class)
 
   ;; When EXWM starts up, do some extra confifuration
   (add-hook 'exwm-init-hook #'av/exwm-init-hook)
@@ -62,6 +82,12 @@
                            (interactive)
                            (exwm-workspace-switch-create ,i))))
                      (number-sequence 0 9))))
+
+  ;; Automatically move EXWM buffer to current workspace when selected
+  (setq exwm-layout-show-all-buffers t)
+
+  ;; Display all EXWM buffers in every workspace buffer list
+  (setq exwm-workspace-show-all-buffers t)
 
   (exwm-input-set-key (kbd "s-SPC") 'counsel-linux-app)
   (exwm-input-set-key (kbd "s-d") 'counsel-linux-app)

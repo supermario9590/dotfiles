@@ -62,7 +62,6 @@ This is my Emacs configuration written as an Org Mode document.
     - [[#configuration][Configuration]]
 :END:
 
-
 * Dotfiles
 
   All of my dotfiles are in a directory and that directory is symlinked to my home directory. This code makes it so that it automatically follows symlinks.
@@ -264,10 +263,6 @@ This is my Emacs configuration written as an Org Mode document.
        :init
        (ivy-mode))
 
-     (use-package ivy-rich
-       :init
-       (ivy-rich-mode 1))
-
      (use-package counsel
        :bind (("M-x" . counsel-M-x)
               ("C-x b" . counsel-ibuffer)
@@ -276,6 +271,10 @@ This is my Emacs configuration written as an Org Mode document.
               ("C-r" . 'counsel-minibuffer-history))
        :custom
        (counsel-linux-app-format-function #'counsel-linux-app-format-function-name-only))
+
+     (use-package ivy-rich
+       :init
+       (ivy-rich-mode 1))
 
    #+end_src
 
