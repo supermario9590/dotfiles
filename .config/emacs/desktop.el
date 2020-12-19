@@ -37,6 +37,7 @@
   (pcase exwm-class-name
     ("Chromium" (exwm-workspace-move-window 2) )
     ("Vimb"     (exwm-workspace-move-window 2) )
+    ("discord"  (exwm-workspace-move-window 6) )
     ("mpv"      (exwm-floating-toggle-floating)
                 (exwm-layout-toggle-mode-line) )))
 
@@ -131,16 +132,16 @@
 
 (defun av/polybar-exwm-workspace ()
   (pcase exwm-workspace-current-index
-    (0 "")
-    (1 "dev")
-    (2 "www")
-    (3 "sys")
-    (4 "doc")
-    (5 "vbox")
-    (6 "chat")
-    (7 "mus")
-    (8 "vid")
-    (9 "gfx")))
+    (0 "hello")
+    (1 "")
+    (2 "")
+    (3 "")
+    (4 "")
+    (5 "")
+    (6 "")
+    (7 "")
+    (8 "")
+    (9 "")))
 
 (defun av/send-polybar-hook (module-name hook-index)
   (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook %s %s" module-name hook-index)))
