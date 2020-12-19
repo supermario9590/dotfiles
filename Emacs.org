@@ -302,13 +302,13 @@ This is my Emacs configuration written as an Org Mode document.
 
    #+begin_src emacs-lisp
 
-      (use-package hydra)
+     (use-package hydra)
 
-      (defhydra hydra-text-scale (:timeout 4)
-        "scale text"
-        ("j" text-scale-increase "in")
-        ("k" text-scale-decrease "out")
-        ("f" nil "finished" :exit t))
+     (defhydra hydra-text-scale (:timeout 4)
+       "scale text"
+       ("j" text-scale-increase "in")
+       ("k" text-scale-decrease "out")
+       ("f" nil "finished" :exit t))
 
      (av/leader-keys
        "ts" '(hydra-text-scale/body :which-key "scale text"))

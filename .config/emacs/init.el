@@ -150,11 +150,11 @@
 
 (use-package hydra)
 
- (defhydra hydra-text-scale (:timeout 4)
-   "scale text"
-   ("j" text-scale-increase "in")
-   ("k" text-scale-decrease "out")
-   ("f" nil "finished" :exit t))
+(defhydra hydra-text-scale (:timeout 4)
+  "scale text"
+  ("j" text-scale-increase "in")
+  ("k" text-scale-decrease "out")
+  ("f" nil "finished" :exit t))
 
 (av/leader-keys
   "ts" '(hydra-text-scale/body :which-key "scale text"))
@@ -460,16 +460,3 @@
   :config
   (evil-collection-define-key 'normal 'dired-mode-map
     "H" 'dired-hide-dotfiles-mode))
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(org desktop-environment exwm dired-hide-dotfiles dired-open all-the-icons-dired dired-single eshell-git-prompt vterm eterm-256color evil-nerd-commenter rainbow-delimiters magit counsel-projectile projectile org-make-toc org-tree-slide visual-fill-column org-bullets hydra helpful counsel which-key use-package ivy-rich general evil-collection doom-themes doom-modeline)))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )

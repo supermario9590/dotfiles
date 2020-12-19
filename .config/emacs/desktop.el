@@ -15,6 +15,9 @@
   ;; Open eshell by default
   ;;(eshell)
 
+  ;; Polybar
+  (av/start-panel)
+
   ;; Launch apps that will run in the background
   (av/run-in-background "nm-applet")
   (av/run-in-background "xfce4-power-manager"))
@@ -32,8 +35,8 @@
   (message "Window '%s' appeared!" exwm-class-name)
 
   (pcase exwm-class-name
-    ("Chromium" (exwm-workspace-move-window 1) )
-    ("Vimb"     (exwm-workspace-move-window 1) )
+    ("Chromium" (exwm-workspace-move-window 2) )
+    ("Vimb"     (exwm-workspace-move-window 2) )
     ("mpv"      (exwm-floating-toggle-floating)
                 (exwm-layout-toggle-mode-line) )))
 
@@ -49,7 +52,7 @@
   ;; When EXWM starts up, do some extra confifuration
   (add-hook 'exwm-init-hook #'av/exwm-init-hook)
 
-  (setq exwm-workspace-number 5)
+  (setq exwm-workspace-number 10)
 
   (av/set-wallpaper)
 
@@ -96,10 +99,7 @@
   ;; Remap CapsLock to Ctrl
   (start-process-shell-command "xmodmap" nil "xmodmap ~/.config/emacs/exwm/Xmodmap")
 
-  ;; Systemtray
-  (require 'exwm-systemtray)
-  (exwm-systemtray-enable)
-
+  ;; Enable EXWM
   (exwm-enable))
 
 (use-package desktop-environment
@@ -110,3 +110,43 @@
   (desktop-environment-brightness-small-decrement "2%-")
   (desktop-environment-brightness-normal-increment "5%+")
   (desktop-environment-brightness-normal-decrement "5%-"))
+
+;; Make sure the server is started (better to do this in your main Emacs config!)
+(server-start)
+
+(defvar av/polybar-process nil
+  "Holds the process of the running Polybar instance, if any")
+
+(defun av/kill-panel ()
+  (interactive)
+  (when av/polybar-process
+    (ignore-errors
+      (kill-process av/polybar-process)))
+  (setq av/polybar-process nil))
+
+(defun av/start-panel ()
+  (interactive)
+  (av/kill-panel)
+  (setq av/polybar-process (start-process-shell-command "polybar" nil "polybar panel")))
+
+(defun av/polybar-exwm-workspace ()
+  (pcase exwm-workspace-current-index
+    (0 "")
+    (1 "dev")
+    (2 "www")
+    (3 "sys")
+    (4 "doc")
+    (5 "vbox")
+    (6 "chat")
+    (7 "mus")
+    (8 "vid")
+    (9 "gfx")))
+
+(defun av/send-polybar-hook (module-name hook-index)
+  (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook %s %s" module-name hook-index)))
+
+(defun av/send-polybar-exwm-workspace ()
+  (av/send-polybar-hook "exwm-workspace" 1))
+
+;; Update panel indicator when workspace changes
+(add-hook 'exwm-workspace-switch-hook #'av/send-polybar-exwm-workspace)
