@@ -6,6 +6,7 @@
     icon_bell = False
     cursor_color = "#aaaaaa"
     font = Fira Code 10
+    show_titlebar = False
     scrollbar_position = hidden
     use_system_font = False
 [layouts]

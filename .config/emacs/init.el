@@ -69,8 +69,12 @@
     :global-prefix "C-SPC")
 
   (av/leader-keys
-    "t"  '(:ignore t :which-key "toggles")
-    "tt" '(counsel-load-theme :which-key "choose theme")))
+    "t"  '(:ignore t                                           :which-key "toggles"          )
+    "tt" '(counsel-load-theme                                  :which-key "choose theme"     )
+    "c"  '(:ignore t                                           :which-key "configs"          )
+    "ce" '(:ignore t                                           :which-key "emacs configs"    )
+    "ceb" '((lambda () (interactive) (find-file "~/Emacs.org"))   :which-key "open emacs base config")
+    "ced" '((lambda () (interactive) (find-file "~/Desktop.org")) :which-key "open emacs desktop config")))
 
 (use-package evil
   :init
