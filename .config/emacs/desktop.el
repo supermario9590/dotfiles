@@ -20,7 +20,8 @@
 
   ;; Launch apps that will run in the background
   (av/run-in-background "nm-applet")
-  (av/run-in-background "xfce4-power-manager"))
+  (av/run-in-background "xfce4-power-manager")
+  (av/run-in-background "dunst"))
 
 (defun av/exwm-update-class ()
   (exwm-workspace-rename-buffer exwm-class-name))
@@ -151,3 +152,21 @@
 
 ;; Update panel indicator when workspace changes
 (add-hook 'exwm-workspace-switch-hook #'av/send-polybar-exwm-workspace)
+
+(defun av/dunstctl (command)
+  (start-process-shell-command "dunstctl" nil (concat "dunstctl " command)))
+
+(exwm-input-set-key (kbd "s-n") (lambda () (interactive) (av/dunstctl "history-pop")))
+(exwm-input-set-key (kbd "s-N") (lambda () (interactive) (av/dunstctl "close-all")))
+
+(defun av/disable-desktop-notifications ()
+  (interactive)
+  (start-process-shell-command "notify-send" nil "notify-send \"DUNST_COMMAND_PAUSE\""))
+
+(defun av/enable-desktop-notifications ()
+  (interactive)
+  (start-process-shell-command "notify-send" nil "notify-send \"DUNST_COMMAND_RESUME\""))
+
+(defun av/toggle-desktop-notifications ()
+  (interactive)
+  (start-process-shell-command "notify-send" nil "notify-send \"DUNST_COMMAND_TOGGLE\""))
