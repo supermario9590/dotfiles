@@ -129,7 +129,7 @@
 (defun av/start-panel ()
   (interactive)
   (av/kill-panel)
-  (setq av/polybar-process (start-process-shell-command "polybar" nil "polybar panel")))
+  (setq av/polybar-process (start-process-shell-command "polybar" nil "polybar -c ~/.config/polybar/config-exwm panel")))
 
 (defun av/polybar-exwm-workspace ()
   (pcase exwm-workspace-current-index

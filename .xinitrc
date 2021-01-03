@@ -8,15 +8,7 @@ sysmodmap=/etc/X11/xinit/.Xmodmap
 # merge in defaults and keymaps
 
 if [ -f $sysresources ]; then
-
-
-
-
-
-
-
     xrdb -merge $sysresources
-
 fi
 
 if [ -f $sysmodmap ]; then
@@ -24,15 +16,7 @@ if [ -f $sysmodmap ]; then
 fi
 
 if [ -f "$userresources" ]; then
-
-
-
-
-
-
-
     xrdb -merge "$userresources"
-
 fi
 
 if [ -f "$usermodmap" ]; then
@@ -50,4 +34,13 @@ fi
 
 setxkbmap gb
 
-exec ~/.config/emacs/exwm/start-exwm.sh
+session=${1:-exwm}
+
+case $session in
+    exwm      ) exec ~/.config/emacs/exwm/start-exwm.sh;;
+    xmonad    ) exec xmonad;;
+    i3|i3wm   ) exec i3;;
+    kde       ) exec startplasma-x11;;
+    xfce|xfce4) exec startxfce4;;
+    *         ) exec $1;;
+esac

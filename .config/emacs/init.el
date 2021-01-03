@@ -110,7 +110,7 @@
   (evil-collection-init))
 
 (use-package doom-themes
-  :init (load-theme 'doom-palenight t))
+  :init (load-theme 'doom-dracula t))
 
 (use-package doom-modeline
   :init (doom-modeline-mode 1))
@@ -480,3 +480,24 @@
   :config
   (evil-collection-define-key 'normal 'dired-mode-map
     "H" 'dired-hide-dotfiles-mode))
+
+(use-package mu4e
+  :straight nil
+  :ensure nil
+  :config
+  (setq mu4e-change-filenames-when-moving t)
+
+  (setq mu4e-update-interval (* 10 60))
+  (setq mu4e-get-mail-command "mbsync -a")
+  (setq mu4e-maildir "~/Mail")
+
+  (setq mu4e-drafts-folder "/[Google Mail].Drafts")
+  (setq mu4e-sent-folder "/[Google Mail].Sent Mail")
+  (setq mu4e-refile-folder "/[Google Mail].All Mail")
+  (setq mu4e-trash-folder "/[Google Mail].Bin")
+
+  (setq mu4e-maildir-shortcuts
+      '(("/Inbox" . ?i)
+        ("/[Google Mail].Sent Mail" . ?s)
+        ("/[Google Mail].Bin" . ?t)
+        ("/[Google Mail].All Mail" . ?a))))
